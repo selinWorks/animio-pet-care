@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useCallback,
@@ -16,151 +17,100 @@ import {
 
 import {useAuth} from './AuthContext';
 
-
-/* =========================================================
-   CONTEXT TYPE
-========================================================= */
-
 type PetContextType = {
   pets: Pet[];
   addPet: (pet: Pet) => void;
-
   removePet: (
     id: string,
     newOwnerId?: string,
   ) => Promise<void>;
-
-  deletePet: (
-    id: string,
-  ) => Promise<void>;
-
-  updatePet: (
-    updatedPet: Pet,
-  ) => Promise<void>;
-
+  deletePet: (id: string) => Promise<void>;
+  updatePet: (updatedPet: Pet) => Promise<void>;
   reloadPets: () => Promise<void>;
 };
 
-
-/* =========================================================
-   CONTEXT
-========================================================= */
-
-const PetContext =
-  createContext<
-    PetContextType | undefined
-  >(undefined);
-
-
-/* =========================================================
-   PROVIDER
-========================================================= */
+const PetContext = createContext<PetContextType | undefined>(
+  undefined,
+);
 
 export const PetProvider: React.FC<{
   children: React.ReactNode;
 }> = ({children}) => {
   const {user} = useAuth();
 
-  const [pets, setPets] =
-    useState<Pet[]>([]);
+  const [pets, setPets] = useState<Pet[]>([]);
 
+  // FIREBASE'DEN HAYVANLARI YÜKLE
+  const loadPets = useCallback(async () => {
+    if (!user?.uid) {
+      setPets([]);
+      return;
+    }
 
-  /* =======================================================
-     LOAD PETS
-  ======================================================= */
-
-  const loadPets = useCallback(
-    async () => {
-      try {
-        if (!user?.uid) {
-          setPets([]);
-          return;
-        }
-
-        const data =
-          await getPetsFromFirestore(
-            user.uid,
-          );
-
-        setPets(data);
-      } catch (error) {
-        console.log(
-          'Petler yüklenemedi:',
-          error,
-        );
-      }
-    },
-    [user?.uid],
-  );
-
-
-  /* =======================================================
-     INITIAL LOAD
-  ======================================================= */
+    try {
+      const data = await getPetsFromFirestore(user.uid);
+      setPets(data as Pet[]);
+    } catch (error) {
+      console.log('Petler yüklenemedi:', error);
+    }
+  }, [user?.uid]);
 
   useEffect(() => {
     loadPets();
   }, [loadPets]);
 
+  // HAYVAN EKLE
+  const addPet = useCallback((pet: Pet) => {
+    setPets(prev => {
+      const existingIndex = prev.findIndex(
+        item => item.id === pet.id,
+      );
 
-  /* =======================================================
-     ADD PET
-  ======================================================= */
+      if (existingIndex !== -1) {
+        return prev.map(item =>
+          item.id === pet.id ? {...item, ...pet} : item,
+        );
+      }
 
-  const addPet = (pet: Pet) => {
-    setPets(prev => [
-      ...prev,
-      pet,
-    ]);
-  };
+      return [...prev, pet];
+    });
+  }, []);
 
-
-  /* =======================================================
-     REMOVE PET / LEAVE PET
-  ======================================================= */
-
+  // AİLEDEN AYRIL / ÜYELİKTEN ÇIK
   const removePet = async (
     id: string,
     newOwnerId?: string,
   ) => {
-    try {
-      if (!user?.uid) {
-        return;
-      }
+    if (!user?.uid) {
+      throw new Error('Kullanıcı oturumu bulunamadı.');
+    }
 
+    try {
       await deletePetFromFirestore(
         id,
         user.uid,
         newOwnerId ?? null,
       );
 
-      /*
-       * Eğer kullanıcı pet'ten ayrıldıysa
-       * artık kendi listesinde görünmemeli.
-       */
       setPets(prev =>
-        prev.filter(
-          pet => pet.id !== id,
-        ),
+        prev.filter(pet => pet.id !== id),
       );
     } catch (error) {
       console.log(
         'Pet üyeliğinden ayrılma hatası:',
         error,
       );
-
       throw error;
     }
   };
 
-  const deletePet = async (
-    id: string,
-  ) => {
-    try {
-      if (!user?.uid) {
-        return;
-      }
+  // HAYVANI TAMAMEN SİL
+  const deletePet = async (id: string) => {
+    if (!user?.uid) {
+      throw new Error('Kullanıcı oturumu bulunamadı.');
+    }
 
+    try {
       await deletePetFromFirestore(
         id,
         user.uid,
@@ -169,72 +119,51 @@ export const PetProvider: React.FC<{
       );
 
       setPets(prev =>
-        prev.filter(
-          pet => pet.id !== id,
-        ),
+        prev.filter(pet => pet.id !== id),
       );
     } catch (error) {
-      console.log(
-        'Dost silme hatası:',
-        error,
-      );
-
+      console.log('Dost silme hatası:', error);
       throw error;
     }
   };
 
+  // HAYVAN BİLGİLERİNİ GÜNCELLE
+  const updatePet = async (updatedPet: Pet) => {
+    if (!user?.uid) {
+      throw new Error('Kullanıcı oturumu bulunamadı.');
+    }
 
-  /* =======================================================
-     UPDATE PET
-  ======================================================= */
-
-  const updatePet = async (
-    updatedPet: Pet,
-  ) => {
     try {
-      if (!user?.uid) {
-        return;
-      }
-
       await updatePetInFirestore(
         updatedPet,
         user.uid,
       );
 
       setPets(prev =>
-        prev.map(p =>
-          p.id === updatedPet.id
-            ? {
-                ...updatedPet,
+        prev.map(pet => {
+          if (pet.id !== updatedPet.id) {
+            return pet;
+          }
 
-                petMembers:
-                  updatedPet.petMembers?.includes(
-                    user.uid,
-                  )
-                    ? updatedPet.petMembers
-                    : [
-                        ...(updatedPet.petMembers ||
-                          []),
-                        user.uid,
-                      ],
-              }
-            : p,
-        ),
+          const memberIds = new Set([
+            ...(updatedPet.petMembers ??
+              pet.petMembers ??
+              []),
+            user.uid,
+          ]);
+
+          return {
+            ...pet,
+            ...updatedPet,
+            petMembers: Array.from(memberIds),
+          };
+        }),
       );
     } catch (error) {
-      console.log(
-        'Güncelleme hatası:',
-        error,
-      );
-
+      console.log('Güncelleme hatası:', error);
       throw error;
     }
   };
-
-
-  /* =======================================================
-     PROVIDER
-  ======================================================= */
 
   return (
     <PetContext.Provider
@@ -251,20 +180,14 @@ export const PetProvider: React.FC<{
   );
 };
 
-
-/* =========================================================
-   HOOK
-========================================================= */
-
 export const usePets = () => {
-  const ctx =
-    useContext(PetContext);
+  const context = useContext(PetContext);
 
-  if (!ctx) {
+  if (!context) {
     throw new Error(
       'usePets must be used within PetProvider',
     );
   }
 
-  return ctx;
+  return context;
 };

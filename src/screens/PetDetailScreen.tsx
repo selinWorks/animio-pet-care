@@ -32,6 +32,7 @@ import {
 import {RootStackParamList} from '../navigation/AppNavigator';
 import {usePets} from '../data/PetContext';
 import {useAuth} from '../data/AuthContext';
+import {formatPetAge} from '../utils/petAge';
 
 
 type ProfileWeightChartPoint = {
@@ -490,20 +491,6 @@ function getPetHero(type: string) {
   return petDetailCatHero;
 }
 
-function getDisplayAge(pet: {
-  birthYear?: number;
-  age?: number;
-}) {
-  if (pet.birthYear) {
-    return Math.max(
-      new Date().getFullYear() - pet.birthYear,
-      0,
-    );
-  }
-
-  return pet.age ?? 0;
-}
-
 
 /* =========================================================
    SMALL COMPONENTS
@@ -717,7 +704,7 @@ export default function PetDetailScreen({
     ]).start();
   }, [screenOpacity, screenTranslateY]);
 
-  const displayAge = getDisplayAge(currentPet);
+  const displayAge = formatPetAge(currentPet);
 
   const handleLeave = async () => {
     try {
@@ -1794,7 +1781,7 @@ const styles = StyleSheet.create({
   },
 
   weightAgeStatCard: {
-    flex: 1.45,
+    flex: 1.8,
     backgroundColor: '#EAFBF1',
     flexDirection: 'row',
     alignItems: 'center',
@@ -1836,7 +1823,7 @@ const styles = StyleSheet.create({
 
   statValue: {
     color: '#111C37',
-    fontSize: 15,
+    fontSize: 13,
     fontFamily: 'Quicksand-Bold',
   },
 

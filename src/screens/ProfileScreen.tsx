@@ -880,7 +880,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingTop: 18,
+    paddingTop: 55,
     paddingBottom: 120,
     backgroundColor: '#F7F8FC',
   },

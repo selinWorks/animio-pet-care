@@ -48,8 +48,9 @@ export const addPetToFirestore = async (
       type:
         pet?.type || '',
 
-      birthYear:
-        pet?.birthYear || null,
+      birthYear: pet?.birthYear ?? null,
+      birthDate: pet?.birthDate || '',
+      birthDatePrecision: pet?.birthDatePrecision || 'year',
 
       gender:
         pet?.gender || '',
@@ -227,8 +228,9 @@ export const updatePetInFirestore = async (
     type:
       pet.type || '',
 
-    birthYear:
-      pet.birthYear || null,
+    birthYear: pet.birthYear ?? null,
+    birthDate: pet.birthDate ?? existingData.birthDate ?? '',
+    birthDatePrecision: pet.birthDatePrecision ?? existingData.birthDatePrecision ?? 'year',
 
     gender:
       pet.gender || '',
@@ -434,6 +436,8 @@ export const getPetsFromFirestore = async uid => {
             typeof data.birthYear === 'number'
               ? data.birthYear
               : undefined,
+          birthDate: data.birthDate || '',
+          birthDatePrecision: data.birthDatePrecision || 'year',
 
           gender:
             data.gender || '',

@@ -437,7 +437,7 @@ function FloatingTabBar({
       pointerEvents="box-none"
       style={[
         barStyles.wrapper,
-        {bottom: Math.max(insets.bottom, 12) + 2},,
+        {bottom: Math.max(insets.bottom, 12) + 2},
       ]}>
       <View style={barStyles.shadow}>
         <View style={barStyles.dock}>
@@ -614,7 +614,7 @@ function MainAppNavigator() {
       <Stack.Screen
         name="Notifications"
         component={NotificationsScreen}
-        options={{title: 'Bildirimler'}}
+        options={{headerShown: false}}
       />
 
       <Stack.Screen

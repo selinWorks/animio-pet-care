@@ -1,5 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import type {RootStackParamList} from '../navigation/AppNavigator';
 
 import {
   View,
@@ -7,11 +9,13 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {
+  ArrowLeft,
   Bell,
   CalendarDays,
   Clock,
@@ -49,7 +53,12 @@ const F = {
    NOTIFICATIONS SCREEN
 ========================================================= */
 
-const NotificationsScreen = () => {
+type NotificationsScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'Notifications'
+>;
+
+const NotificationsScreen = ({navigation}: NotificationsScreenProps) => {
   const {user} = useAuth();
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -237,10 +246,20 @@ const NotificationsScreen = () => {
   /* UI */
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
       {/* HEADER */}
 
       <View style={styles.header}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Geri dön"
+          hitSlop={8}
+          activeOpacity={0.75}
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <ArrowLeft size={22} color={C.text} strokeWidth={2.2} />
+        </TouchableOpacity>
+
         <View style={styles.headerIcon}>
           <Bell
             size={23}
@@ -339,8 +358,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 0,
-    paddingBottom: 14,
+    paddingTop: 16,
+    paddingBottom: 18,
+  },
+
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    backgroundColor: C.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: C.border,
   },
 
   headerIcon: {

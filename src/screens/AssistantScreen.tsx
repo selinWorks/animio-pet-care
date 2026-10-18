@@ -8,6 +8,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -15,7 +16,7 @@ import {
   TextInput,
 } from 'react-native';
 
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 
 import {
@@ -462,6 +463,7 @@ const OTHER_ANIMAL_TYPES = [
 
 const AssistantScreen = () => {
   const tabBarHeight = 80;
+  const insets = useSafeAreaInsets();
   const {user} = useAuth();
 
   const [petType, setPetType] =
@@ -997,7 +999,7 @@ const AssistantScreen = () => {
   const morphTop =
     drawerAnimation.interpolate({
       inputRange: [0, 1],
-      outputRange: [65, 65],
+      outputRange: [insets.top + 14, insets.top + 14],
     });
 
   const morphLeft =
@@ -1276,9 +1278,12 @@ const AssistantScreen = () => {
 
   return (
     <>
-      <SafeAreaView
-        style={styles.safeArea}
-        edges={['top']}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+      <View style={styles.safeArea}>
 
         <View style={styles.screen}>
 
@@ -1288,9 +1293,7 @@ const AssistantScreen = () => {
 
           <View
             pointerEvents="none"
-            style={
-              styles.heroBackground
-            }>
+            style={[styles.heroBackground, {height: 340 + insets.top}]}>
 
             <View
               style={styles.heroGlowOne}
@@ -1330,11 +1333,11 @@ const AssistantScreen = () => {
                 HERO
                 ================================================= */}
 
-            <View style={styles.hero}>
+            <View style={[styles.hero, {height: 200 + insets.top}]}>
 
               <TouchableOpacity
                 activeOpacity={0.8}
-                style={styles.menuButton}
+                style={[styles.menuButton, {top: insets.top + 14}]}
                 onPress={openHistory}>
 
                 <Menu
@@ -1346,9 +1349,7 @@ const AssistantScreen = () => {
               </TouchableOpacity>
 
               <View
-                style={
-                  styles.heroTitleArea
-                }>
+                style={[styles.heroTitleArea, {top: insets.top + 90}]}>
 
                 <View
                   style={
@@ -1397,7 +1398,7 @@ const AssistantScreen = () => {
               <Image
                 source={aiOrb}
                 resizeMode="contain"
-                style={styles.orbImage}
+                style={[styles.orbImage, {top: insets.top + 15}]}
               />
 
             </View>
@@ -2996,7 +2997,7 @@ const AssistantScreen = () => {
 
         </View>
 
-      </SafeAreaView>
+      </View>
 
       {/* =================================================
           VALIDATION MODAL
@@ -3324,7 +3325,7 @@ const styles = StyleSheet.create({
      ======================================================= */
 
   hero: {
-    height: 220,
+    height: 200,
     position: 'relative',
   },
 

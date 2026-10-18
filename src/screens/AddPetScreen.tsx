@@ -719,11 +719,11 @@ export default function AddPetScreen({navigation}: any) {
         initialDate = existingDate;
       }
     } else if (birthDatePrecision === 'month') {
-      const match = birthDate.match(/^(\\d{2})\\.(\\d{4})$/);
+      const match = birthDate.match(/^(\d{2})\.(\d{4})$/);
       if (match) {
         initialDate = new Date(Number(match[2]), Number(match[1]) - 1, 1);
       }
-    } else if (/^\\d{4}$/.test(birthDate)) {
+    } else if (/^\d{4}$/.test(birthDate)) {
       initialDate = new Date(Number(birthDate), 0, 1);
     }
 
