@@ -443,54 +443,54 @@ function getDefaultPetAvatar(type: string) {
  * gösterilecek hero/banner görseli.
  */
 function getPetHero(type: string) {
-  const lowerType = normalizePetType(type);
+  const value = normalizePetType(type);
 
-  /* KEDİ */
+  const matches = (names: string[]) =>
+    names.some(name => value.includes(name));
 
-  if (lowerType.includes('kedi')) {
-    return petDetailCatHero;
+  // Kayıtta alt tür (ör. Papağan, Siyam, Golden Retriever) tutuluyor.
+  // Bu nedenle yalnızca ana kategori adına bakmak yeterli değil.
+  if (matches([
+    'kedi', 'cat', 'british shorthair', 'scottish fold', 'siyam',
+    'maine coon', 'ragdoll', 'tekir', 'sfenks', 'bengal',
+    'birman', 'abyssinian',
+  ])) {
+    return {source: petDetailCatHero, isBanner: true};
   }
 
-  /* KÖPEK */
-
-  if (
-    lowerType.includes('köpek') ||
-    lowerType.includes('kopek')
-  ) {
-    return petDetailDogHero;
+  if (matches([
+    'köpek', 'kopek', 'dog', 'golden retriever', 'labrador',
+    'alman kurdu', 'french bulldog', 'poodle', 'chihuahua',
+    'beagle', 'husky', 'pomeranian', 'rottweiler', 'cocker spaniel',
+    'dachshund', 'maltese', 'shih tzu', 'border collie',
+  ])) {
+    return {source: petDetailDogHero, isBanner: true};
   }
 
-  /* KUŞ */
-
-  if (
-    lowerType.includes('kuş') ||
-    lowerType.includes('kus')
-  ) {
-    return petDetailBirdHero;
+  if (matches([
+    'kuş', 'kus', 'bird', 'muhabbet', 'papağan', 'papagan',
+    'kanarya', 'ispinoz', 'güvercin', 'guvercin',
+    'serçe', 'serce', 'bülbül', 'bulbul',
+  ])) {
+    return {source: petDetailBirdHero, isBanner: true};
   }
 
-  /* HAMSTER */
-
-  if (lowerType.includes('hamster')) {
-    return petDetailHamsterHero;
+  if (matches([
+    'kemirgen', 'hamster', 'kobay', 'gine domuzu', 'çinçilla',
+    'cincilla', 'fare', 'sıçan', 'sican', 'gerbil',
+  ])) {
+    return {source: petDetailHamsterHero, isBanner: true};
   }
 
-  /* TAVŞAN */
-
-  if (
-    lowerType.includes('tavşan') ||
-    lowerType.includes('tavsan')
-  ) {
-    return petDetailRabbitHero;
+  if (matches(['tavşan', 'tavsan', 'rabbit'])) {
+    return {source: petDetailRabbitHero, isBanner: true};
   }
 
-  /*
-   * Balık, kaplumbağa, diğer veya ileride
-   * eklenecek türlerde geçici varsayılan hero.
-   */
-  return petDetailCatHero;
+  // Balık, sürüngen ve diğer kategoriler için projede henüz büyük
+  // pet-detail-*-hero görselleri bulunmuyor. Kedi arka planı göstermek
+  // yerine ilgili türün mevcut varsayılan görselini kullanıyoruz.
+  return {source: getDefaultPetAvatar(type), isBanner: false};
 }
-
 
 /* =========================================================
    SMALL COMPONENTS
@@ -705,6 +705,7 @@ export default function PetDetailScreen({
   }, [screenOpacity, screenTranslateY]);
 
   const displayAge = formatPetAge(currentPet);
+  const petHero = getPetHero(currentPet.type);
 
   const handleLeave = async () => {
     try {
@@ -781,9 +782,9 @@ export default function PetDetailScreen({
           <View style={styles.hero}>
 
             <Image
-              source={getPetHero(currentPet.type)}
-              style={styles.heroImage}
-              resizeMode="cover"
+              source={petHero.source}
+              style={[styles.heroImage, !petHero.isBanner && styles.heroFallbackImage]}
+              resizeMode={petHero.isBanner ? "cover" : "contain"}
             />
 
             <View
@@ -1561,6 +1562,10 @@ const styles = StyleSheet.create({
   heroImage: {
     width: '100%',
     height: '100%',
+  },
+
+  heroFallbackImage: {
+    backgroundColor: '#F3EEFF',
   },
 
   heroSoftOverlay: {
