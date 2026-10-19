@@ -1,4 +1,5 @@
 import React, {useMemo, useState} from 'react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -16,6 +17,9 @@ import {
   Dog,
   Bird,
   Rabbit,
+  Rat,
+  Fish,
+  Turtle,
   Plus,
   Heart,
   CalendarDays,
@@ -106,6 +110,10 @@ type FilterType =
   | 'cat'
   | 'dog'
   | 'bird'
+  | 'rodent'
+  | 'rabbit'
+  | 'fish'
+  | 'reptile'
   | 'other';
 
 const FILTERS: {
@@ -113,31 +121,15 @@ const FILTERS: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-  {
-    key: 'all',
-    label: 'Tümü',
-    icon: <PawPrint size={20} />,
-  },
-  {
-    key: 'cat',
-    label: 'Kediler',
-    icon: <Cat size={20} />,
-  },
-  {
-    key: 'dog',
-    label: 'Köpekler',
-    icon: <Dog size={20} />,
-  },
-  {
-    key: 'bird',
-    label: 'Kuşlar',
-    icon: <Bird size={20} />,
-  },
-  {
-    key: 'other',
-    label: 'Diğer',
-    icon: <Rabbit size={20} />,
-  },
+  {key: 'all', label: 'Tümü', icon: <PawPrint size={20} />},
+  {key: 'cat', label: 'Kediler', icon: <Cat size={20} />},
+  {key: 'dog', label: 'Köpekler', icon: <Dog size={20} />},
+  {key: 'bird', label: 'Kuşlar', icon: <Bird size={20} />},
+  {key: 'rodent', label: 'Kemirgenler', icon: <Rat size={20} />},
+  {key: 'rabbit', label: 'Tavşanlar', icon: <Rabbit size={20} />},
+  {key: 'fish', label: 'Balıklar', icon: <Fish size={20} />},
+  {key: 'reptile', label: 'Sürüngenler', icon: <Turtle size={20} />},
+  {key: 'other', label: 'Diğer', icon: <PawPrint size={20} />},
 ];
 
 /* =========================================================
@@ -152,29 +144,45 @@ function normalizeType(type?: string) {
 
 function getPetCategory(type?: string): FilterType {
   const value = normalizeType(type);
+  const matches = (keywords: string[]) =>
+    keywords.some(keyword => value.includes(keyword));
 
-  if (
-    value.includes('kedi') ||
-    value.includes('cat')
-  ) {
-    return 'cat';
-  }
+  if (matches([
+    'kedi', 'cat', 'british shorthair', 'scottish fold', 'siyam',
+    'maine coon', 'ragdoll', 'tekir', 'sfenks', 'bengal',
+    'birman', 'abyssinian',
+  ])) return 'cat';
 
-  if (
-    value.includes('köpek') ||
-    value.includes('kopek') ||
-    value.includes('dog')
-  ) {
-    return 'dog';
-  }
+  if (matches([
+    'köpek', 'kopek', 'dog', 'golden retriever', 'labrador',
+    'alman kurdu', 'bulldog', 'poodle', 'chihuahua', 'beagle',
+    'husky', 'pomeranian', 'rottweiler', 'cocker spaniel',
+    'dachshund', 'maltese', 'shih tzu', 'border collie',
+  ])) return 'dog';
 
-  if (
-    value.includes('kuş') ||
-    value.includes('kus') ||
-    value.includes('bird')
-  ) {
-    return 'bird';
-  }
+  if (matches([
+    'kuş', 'kus', 'bird', 'muhabbet', 'papağan', 'papagan',
+    'kanarya', 'ispinoz', 'güvercin', 'guvercin', 'serçe',
+    'bülbül', 'bulbul',
+  ])) return 'bird';
+
+  if (matches([
+    'kemirgen', 'hamster', 'kobay', 'çinçilla', 'cincilla',
+    'fare', 'sıçan', 'sican', 'gerbil', 'sincap',
+  ])) return 'rodent';
+
+  if (matches(['tavşan', 'tavsan', 'rabbit'])) return 'rabbit';
+
+  if (matches([
+    'balık', 'balik', 'fish', 'beta', 'betta', 'lepistes',
+    'koi', 'neon tetra', 'moli', 'plati',
+  ])) return 'fish';
+
+  if (matches([
+    'sürüngen', 'surungen', 'kaplumbağa', 'kaplumbaga',
+    'yılan', 'yilan', 'kertenkele', 'iguana', 'geko', 'gecko',
+    'sakallı ejder', 'bukalemun',
+  ])) return 'reptile';
 
   return 'other';
 }
@@ -271,6 +279,8 @@ function getPetAvatar(type?: string): ImageSourcePropType {
 
 export default function PetsScreen() {
   const {pets} = usePets();
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
 
   const navigation = useNavigation<NavigationProp>();
 
@@ -294,13 +304,14 @@ export default function PetsScreen() {
   return (
     <View style={styles.screen}>
       <StatusBar
+        translucent
         barStyle="dark-content"
-        backgroundColor={C.bg}
+        backgroundColor="transparent"
       />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}>
+        contentContainerStyle={[styles.content, {paddingTop: topInset + 16}]}>
 
         {/* =================================================
             TITLE
@@ -314,6 +325,7 @@ export default function PetsScreen() {
             FILTERS
         ================================================= */}
 
+        {petList.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -367,6 +379,7 @@ export default function PetsScreen() {
           })}
 
         </ScrollView>
+        )}
 
         {/* =================================================
             EMPTY STATE / PET LIST
@@ -385,7 +398,6 @@ export default function PetsScreen() {
 
             <WhyAddPet />
 
-            <BottomBanner />
           </>
         ) : (
           <>
@@ -710,26 +722,6 @@ function BenefitCard({
 }
 
 /* =========================================================
-   BOTTOM BANNER
-========================================================= */
-
-function BottomBanner() {
-  return (
-    <View style={styles.bottomBannerContainer}>
-
-      <Image
-        source={require(
-          '../assets/images/pets/pets-bottom-banner.png'
-        )}
-        style={styles.bottomBannerImage}
-        resizeMode="contain"
-      />
-
-    </View>
-  );
-}
-
-/* =========================================================
    PET CARD
 ========================================================= */
 
@@ -820,7 +812,6 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 18,
-    paddingTop: 25,
     paddingBottom: 125,
   },
 
@@ -1238,25 +1229,6 @@ const styles = StyleSheet.create({
     fontFamily: F.regular,
 
     color: C.secondary,
-  },
-
-  /* =====================================================
-     BOTTOM BANNER IMAGE
-  ===================================================== */
-
-  bottomBannerContainer: {
-    width: '105%',
-    marginLeft:-10,
-
-    marginTop: 10,
-    marginBottom: -55,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  bottomBannerImage: {
-    width: '100%',
-    height: 170,
   },
 
   /* =====================================================

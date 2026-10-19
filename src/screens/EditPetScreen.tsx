@@ -51,11 +51,13 @@ import {
   ShieldAlert,
   ChevronRight,
   Clock3,
+  Cake,
 } from 'lucide-react-native';
 
 import {RootStackParamList} from '../navigation/AppNavigator';
 import {usePets} from '../data/PetContext';
 import {useAuth} from '../data/AuthContext';
+import {getPetAgeParts, birthFromAgeParts} from '../utils/petAge';
 
 type EditPetRouteProp = RouteProp<RootStackParamList, 'EditPet'>;
 
@@ -91,20 +93,6 @@ type PetTypeOption = {
   icon: React.ReactNode;
 };
 
-function getPetAge(pet: {
-  birthYear?: number;
-  age?: number;
-}) {
-  if (pet.birthYear) {
-    return Math.max(
-      new Date().getFullYear() - pet.birthYear,
-      0,
-    );
-  }
-
-  return pet.age ?? 0;
-}
-
 export default function EditPetScreen({route}: Props) {
   const routePet = route.params?.pet;
 
@@ -136,10 +124,19 @@ export default function EditPetScreen({route}: Props) {
 
   const [name, setName] = useState(pet?.name || '');
   const [type, setType] = useState(pet?.type || '');
-  const currentYear = new Date().getFullYear();
-  const [age, setAge] = useState(String(pet ? getPetAge(pet) : 0));
+  const initialAgeParts = getPetAgeParts(pet ?? {});
+  const [age, setAge] = useState(String(initialAgeParts.years));
+  const [ageMonths, setAgeMonths] = useState(String(initialAgeParts.months));
+  const [ageEdited, setAgeEdited] = useState(false);
   const [gender, setGender] = useState(pet?.gender || '');
   const [weight, setWeight] = useState(pet?.weight || '');
+
+  useEffect(() => {
+    if (ageEdited) return;
+    const next = getPetAgeParts(pet ?? {});
+    setAge(String(next.years));
+    setAgeMonths(String(next.months));
+  }, [pet?.birthDate, pet?.birthDatePrecision, pet?.birthYear, pet?.age, ageEdited]);
 
   const [hasUnsavedChanges, setHasUnsavedChanges] =
     useState(false);
@@ -384,11 +381,13 @@ export default function EditPetScreen({route}: Props) {
 
   const decreaseAge = () => {
     setAge(String(Math.max(currentAge - 1, 0)));
+    setAgeEdited(true);
     setHasUnsavedChanges(true);
   };
 
   const increaseAge = () => {
-    setAge(String(currentAge + 1));
+    setAge(String(Math.min(currentAge + 1, 99)));
+    setAgeEdited(true);
     setHasUnsavedChanges(true);
   };
 
@@ -540,7 +539,11 @@ export default function EditPetScreen({route}: Props) {
 
     if (
       !age.trim() ||
-      isNaN(Number(age))
+      !ageMonths.trim() ||
+      !Number.isInteger(Number(age)) ||
+      !Number.isInteger(Number(ageMonths)) ||
+      Number(age) < 0 || Number(age) > 99 ||
+      Number(ageMonths) < 0 || Number(ageMonths) > 11
     ) {
       showPopup(
         'Hata',
@@ -555,13 +558,9 @@ export default function EditPetScreen({route}: Props) {
         ...pet,
         name: name.trim(),
         type: type.trim(),
-        birthYear: Math.max(
-          currentYear - Number(age),
-          1900,
-        ),
-
-        // Eski kayıtlarla geçiş döneminde uyumluluk için.
-        // Ekranlarda esas kaynak birthYear'dır.
+        ...(ageEdited
+          ? birthFromAgeParts(Number(age), Number(ageMonths))
+          : {}),
         age: Number(age),
 
         gender: gender.trim(),
@@ -994,79 +993,100 @@ export default function EditPetScreen({route}: Props) {
 
               </ScrollView>
 
-              {/* AGE */}
-
-              <View
-                style={
-                  styles.ageSection
-                }>
-
-                  <Text
-                    style={
-                      styles.fieldLabel
-                    }>
-                    Yaş
-                  </Text>
-
-                  <View style={styles.ageStepper}>
-                    <Pressable
-                      onPress={decreaseAge}
-                      style={({pressed}) => [
-                        styles.ageStepperButton,
-                        pressed && styles.ageStepperButtonPressed,
-                      ]}>
-                      <Minus
-                        size={21}
-                        color="#6F61C9"
-                        strokeWidth={2.5}
-                      />
-                    </Pressable>
-
-                    <View style={styles.ageInputArea}>
-                      <TextInput
-                        value={age}
-                        onChangeText={value => {
-                          const numericValue = value.replace(/[^0-9]/g, '');
-                          setAge(numericValue);
-                          setHasUnsavedChanges(true);
-                        }}
-                        onBlur={() => {
-                          if (!age.trim()) {
-                            setAge('0');
-                            return;
-                          }
-
-                          const numericAge = Math.min(
-                            Math.max(Number(age), 0),
-                            99,
-                          );
-
-                          setAge(String(numericAge));
-                        }}
-                        keyboardType="number-pad"
-                        maxLength={2}
-                        selectTextOnFocus
-                        style={styles.ageInput}
-                        placeholder="0"
-                        placeholderTextColor="#A7A0C8"
-                      />
-                      <Text style={styles.ageUnit}>yaş</Text>
+              {/* AGE: compact unified years / months card */}
+              <View style={styles.ageSection}>
+                <View style={styles.ageCard}>
+                  <View style={styles.ageCardHeader}>
+                    <View style={styles.ageIconBox}>
+                      <Cake size={20} color="#775BE0" strokeWidth={2.1} />
                     </View>
-
-                    <Pressable
-                      onPress={increaseAge}
-                      style={({pressed}) => [
-                        styles.ageStepperButton,
-                        pressed && styles.ageStepperButtonPressed,
-                      ]}>
-                      <Plus
-                        size={21}
-                        color="#6F61C9"
-                        strokeWidth={2.5}
-                      />
-                    </Pressable>
+                    <View style={styles.ageHeaderCopy}>
+                      <Text style={styles.ageCardTitle}>Dostunun Yaşı</Text>
+                      <Text style={styles.ageCardSubtitle}>Yıl ve ay olarak düzenle</Text>
+                    </View>
                   </View>
 
+                  <View style={styles.ageControlsRow}>
+                    <View style={styles.ageControlBox}>
+                      <Text style={styles.ageControlLabel}>YIL</Text>
+                      <View style={styles.ageControlStepper}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Yılı azalt"
+                          onPress={decreaseAge}
+                          style={({pressed}) => [styles.ageSmallButton, pressed && styles.ageStepperButtonPressed]}>
+                          <Minus size={18} color="#6F61C9" strokeWidth={2.5} />
+                        </Pressable>
+                        <TextInput
+                          value={age}
+                          onChangeText={value => {
+                            setAge(value.replace(/[^0-9]/g, ''));
+                            setAgeEdited(true);
+                            setHasUnsavedChanges(true);
+                          }}
+                          onBlur={() => setAge(String(Math.min(99, Math.max(0, Number(age || 0)))))}
+                          keyboardType="number-pad"
+                          maxLength={2}
+                          selectTextOnFocus
+                          style={styles.ageControlInput}
+                          placeholder="0"
+                          placeholderTextColor="#A7A0C8"
+                        />
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Yılı artır"
+                          onPress={increaseAge}
+                          style={({pressed}) => [styles.ageSmallButton, pressed && styles.ageStepperButtonPressed]}>
+                          <Plus size={18} color="#6F61C9" strokeWidth={2.5} />
+                        </Pressable>
+                      </View>
+                    </View>
+
+                    <View style={styles.ageControlBox}>
+                      <Text style={styles.ageControlLabel}>AY</Text>
+                      <View style={styles.ageControlStepper}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Ayı azalt"
+                          onPress={() => {
+                            setAgeMonths(String(Math.max(0, Number(ageMonths || 0) - 1)));
+                            setAgeEdited(true);
+                            setHasUnsavedChanges(true);
+                          }}
+                          style={({pressed}) => [styles.ageSmallButton, pressed && styles.ageStepperButtonPressed]}>
+                          <Minus size={18} color="#6F61C9" strokeWidth={2.5} />
+                        </Pressable>
+                        <TextInput
+                          value={ageMonths}
+                          onChangeText={value => {
+                            const digits = value.replace(/[^0-9]/g, '');
+                            setAgeMonths(digits === '' ? '' : String(Math.min(11, Number(digits))));
+                            setAgeEdited(true);
+                            setHasUnsavedChanges(true);
+                          }}
+                          onBlur={() => setAgeMonths(String(Math.min(11, Math.max(0, Number(ageMonths || 0)))))}
+                          keyboardType="number-pad"
+                          maxLength={2}
+                          selectTextOnFocus
+                          style={styles.ageControlInput}
+                          placeholder="0"
+                          placeholderTextColor="#A7A0C8"
+                        />
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Ayı artır"
+                          onPress={() => {
+                            setAgeMonths(String(Math.min(11, Number(ageMonths || 0) + 1)));
+                            setAgeEdited(true);
+                            setHasUnsavedChanges(true);
+                          }}
+                          style={({pressed}) => [styles.ageSmallButton, pressed && styles.ageStepperButtonPressed]}>
+                          <Plus size={18} color="#6F61C9" strokeWidth={2.5} />
+                        </Pressable>
+                      </View>
+                    </View>
+                  </View>
+                </View>
               </View>
 
               {/* GENDER */}
@@ -2075,74 +2095,104 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
 
-  ageStepper: {
-    height: 62,
-    width: '100%',
-    borderRadius: 19,
-    backgroundColor: '#F4F1FF',
+  ageCard: {
+    backgroundColor: '#F7F4FF',
     borderWidth: 1,
-    borderColor: '#E6DFFF',
+    borderColor: '#E5DDFC',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingTop: 13,
+    paddingBottom: 12,
+  },
+  ageCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 7,
+    marginBottom: 12,
   },
-
-  ageStepperButton: {
-    width: 46,
-    height: 46,
+  ageIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E9E2FF',
+    marginRight: 8,
+  },
+  ageHeaderCopy: {flex: 1, minWidth: 0},
+  ageCardTitle: {
+    fontSize: 13.5,
+    color: '#30235B',
+    fontFamily: 'Quicksand-Bold',
+  },
+  ageCardSubtitle: {
+    fontSize: 10.5,
+    marginTop: 3,
+    color: '#776A9B',
+    fontFamily: 'Quicksand-Medium',
+  },
+  ageSummaryPill: {
+    backgroundColor: '#EBE4FF',
+    borderWidth: 1,
+    borderColor: '#E1D6FF',
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginLeft: 6,
+    maxWidth: 120,
+  },
+  ageSummaryText: {
+    fontSize: 10.5,
+    color: '#6349BC',
+    fontFamily: 'Quicksand-Bold',
+  },
+  ageControlsRow: {flexDirection: 'row', gap: 10},
+  ageControlBox: {
+    flex: 1,
+    minWidth: 0,
+    borderWidth: 1,
+    borderColor: '#EAE3F8',
     borderRadius: 15,
     backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E8E3F8',
-    shadowColor: '#7766D0',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 1,
+    paddingHorizontal: 7,
+    paddingTop: 10,
+    paddingBottom: 9,
   },
-
-  ageStepperButtonPressed: {
-    opacity: 0.72,
-    transform: [{scale: 0.96}],
+  ageControlLabel: {
+    fontSize: 10.5,
+    letterSpacing: 0.5,
+    color: '#76669F',
+    textAlign: 'center',
+    fontFamily: 'Quicksand-Bold',
+    marginBottom: 8,
   },
-
-  ageInputArea: {
-    flex: 1,
-    height: 48,
-    marginHorizontal: 8,
-    borderRadius: 15,
-    backgroundColor: '#ECE7FF',
+  ageControlStepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#D9CFFF',
+    justifyContent: 'space-between',
   },
-
-  ageInput: {
-    minWidth: 36,
-    maxWidth: 64,
-    height: 48,
-    paddingVertical: 0,
-    paddingHorizontal: 3,
-    color: '#372A78',
+  ageSmallButton: {
+    width: 32,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFEAFF',
+  },
+  ageControlInput: {
+    flex: 1,
+    minWidth: 26,
+    height: 36,
+    color: '#332566',
     fontSize: 20,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
     fontFamily: 'Quicksand-Bold',
     textAlign: 'center',
   },
-
-  ageUnit: {
-    marginLeft: 2,
-    color: '#786BAA',
-    fontSize: 12,
-    fontFamily: 'Quicksand-SemiBold',
+  ageStepperButtonPressed: {
+    opacity: 0.7,
+    transform: [{scale: 0.96}],
   },
-
   genderRow: {
     flexDirection: 'row',
     width: '100%',
@@ -2782,4 +2832,3 @@ const styles = StyleSheet.create({
   },
 
 });
-

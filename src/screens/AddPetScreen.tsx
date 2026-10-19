@@ -143,7 +143,6 @@ export const ANIMAL_SUBTYPES: Record<string, string[]> = {
     'Fare',
     'Sıçan',
     'Gerbil',
-    'Sincap',
     'Diğer',
   ],
 
@@ -4547,3 +4546,4 @@ const styles = StyleSheet.create({
   },
 
 });
+
