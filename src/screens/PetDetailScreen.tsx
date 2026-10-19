@@ -109,6 +109,40 @@ const petDetailRabbitHero = require(
   '../assets/images/pets/pet-detail-rabbit-hero.png',
 );
 
+// Balık kategorisi için hazırlanan özel arka plan.
+const petDetailFishHero = require(
+  '../assets/images/pets/Güneşli Odada Japon Balığı Kavanozu.png',
+);
+
+// Kaplumbağa alt türü için özel arka plan.
+const petDetailTurtleHero = require(
+  '../assets/images/pets/Güneşli Teraryumda Sevimli Kaplumbağa.png',
+);
+
+const petDetailSnakeHero = require(
+  '../assets/images/pets/pet-detail-snake-hero.png',
+);
+
+const petDetailLizardHero = require(
+  '../assets/images/pets/pet-detail-lizard-hero.png',
+);
+
+const petDetailIguanaHero = require(
+  '../assets/images/pets/pet-detail-iguana-hero.png',
+);
+
+const petDetailGeckoHero = require(
+  '../assets/images/pets/pet-detail-gecko-hero.png',
+);
+
+const petDetailBeardedDragonHero = require(
+  '../assets/images/pets/pet-detail-bearded-dragon-hero.png',
+);
+
+const petDetailChameleonHero = require(
+  '../assets/images/pets/pet-detail-chameleon-hero.png',
+);
+
 /* DEFAULT AVATARS */
 
 
@@ -486,9 +520,47 @@ function getPetHero(type: string) {
     return {source: petDetailRabbitHero, isBanner: true};
   }
 
-  // Balık, sürüngen ve diğer kategoriler için projede henüz büyük
-  // pet-detail-*-hero görselleri bulunmuyor. Kedi arka planı göstermek
-  // yerine ilgili türün mevcut varsayılan görselini kullanıyoruz.
+  // Balık ana kategorisi ve Dost Ekle ekranındaki bütün balık alt türleri.
+  if (matches([
+    'balık', 'balik', 'fish', 'japon balığı', 'japon baligi',
+    'beta', 'betta', 'lepistes', 'melek balığı', 'melek baligi',
+    'koi', 'çöpçü balığı', 'copcu baligi', 'neon tetra',
+    'moli', 'plati',
+  ])) {
+    return {source: petDetailFishHero, isBanner: true};
+  }
+
+  // Kaplumbağa alt türü seçildiğinde kendi arka planını kullan.
+  if (matches(['kaplumbağa', 'kaplumbaga', 'turtle', 'tortoise'])) {
+    return {source: petDetailTurtleHero, isBanner: true};
+  }
+
+  if (matches(['yılan', 'yilan', 'snake'])) {
+    return {source: petDetailSnakeHero, isBanner: true};
+  }
+
+  if (matches(['kertenkele', 'lizard'])) {
+    return {source: petDetailLizardHero, isBanner: true};
+  }
+
+  if (matches(['iguana'])) {
+    return {source: petDetailIguanaHero, isBanner: true};
+  }
+
+  if (matches(['geko', 'gecko'])) {
+    return {source: petDetailGeckoHero, isBanner: true};
+  }
+
+  if (matches(['sakallı ejder', 'sakalli ejder', 'sakallı ejderha', 'sakalli ejderha', 'bearded dragon'])) {
+    return {source: petDetailBeardedDragonHero, isBanner: true};
+  }
+
+  if (matches(['bukalemun', 'chameleon'])) {
+    return {source: petDetailChameleonHero, isBanner: true};
+  }
+
+  // Diğer sürüngen ve kategoriler için özel büyük arka plan henüz yok.
+  // Bu türlerde yanlış hayvan arka planı yerine varsayılan avatarı göster.
   return {source: getDefaultPetAvatar(type), isBanner: false};
 }
 
