@@ -41,139 +41,10 @@ import {
 import {usePets} from '../data/PetContext';
 import {addPetToFirestore} from '../services/firestore';
 
-const PET_TYPES = [
-  {
-    name: 'Kedi',
-    image: require('../assets/images/pets/default-cat-pixel.png'),
-    bgGradient: ['#E6E0FF', '#D6CBFF'],
-    badgeColor: '#7C3AED',
-  },
-  {
-    name: 'Köpek',
-    image: require('../assets/images/pets/default-dog-pixel.png'),
-    bgGradient: ['#FFE4E6', '#FECDD3'],
-    badgeColor: '#FF7675',
-  },
-  {
-    name: 'Kuş',
-    image: require('../assets/images/pets/default-bird-pixel.png'),
-    bgGradient: ['#FEF3C7', '#FDE68A'],
-    badgeColor: '#FDCB6E',
-  },
-  {
-    name: 'Kemirgen',
-    image: require('../assets/images/pets/default-hamster-pixel.png'),
-    bgGradient: ['#FDEBD0', '#F8D9B0'],
-    badgeColor: '#C98A4B',
-  },
-  {
-    name: 'Tavşan',
-    image: require('../assets/images/pets/default-rabbit-pixel.png'),
-    bgGradient: ['#F3E8FF', '#E9D5FF'],
-    badgeColor: '#A855F7',
-  },
-  {
-    name: 'Balık',
-    image: require('../assets/images/pets/default-fish-pixel.png'),
-    bgGradient: ['#DBEAFE', '#BFDBFE'],
-    badgeColor: '#3B82F6',
-  },
-  {
-    name: 'Sürüngen',
-    image: require('../assets/images/pets/default-reptile-pixel.png'),
-    bgGradient: ['#DCFCE7', '#BBF7D0'],
-    badgeColor: '#22C55E',
-  },
-];
-
-export const ANIMAL_SUBTYPES: Record<string, string[]> = {
-  Kedi: [
-    'British Shorthair',
-    'Scottish Fold',
-    'Siyam',
-    'İran Kedisi',
-    'Maine Coon',
-    'Ragdoll',
-    'Van Kedisi',
-    'Tekir',
-    'Sfenks',
-    'Bengal',
-    'Birman',
-    'Abyssinian',
-    'Diğer',
-  ],
-
-  Köpek: [
-    'Golden Retriever',
-    'Labrador Retriever',
-    'Alman Kurdu',
-    'French Bulldog',
-    'Poodle',
-    'Chihuahua',
-    'Beagle',
-    'Husky',
-    'Pomeranian',
-    'Rottweiler',
-    'Cocker Spaniel',
-    'Dachshund',
-    'Maltese',
-    'Shih Tzu',
-    'Border Collie',
-    'Diğer',
-  ],
-
-  Kuş: [
-    'Muhabbet Kuşu',
-    'Papağan',
-    'Kanarya',
-    'Sultan Papağanı',
-    'Sevda Papağanı',
-    'İspinoz',
-    'Güvercin',
-    'Serçe',
-    'Bülbül',
-    'Hint Bülbülü',
-    'Diğer',
-  ],
-
-  Kemirgen: [
-    'Hamster',
-    'Kobay',
-    'Çinçilla',
-    'Fare',
-    'Sıçan',
-    'Gerbil',
-    'Diğer',
-  ],
-
-  Tavşan: [
-    'Tavşan',
-  ],
-
-  Balık: [
-    'Japon Balığı',
-    'Beta',
-    'Lepistes',
-    'Melek Balığı',
-    'Koi',
-    'Çöpçü Balığı',
-    'Neon Tetra',
-    'Moli',
-    'Plati',
-    'Diğer',
-  ],
-
-  Sürüngen: [
-    'Kaplumbağa',
-    'Yılan',
-    'Kertenkele',
-    'İguana',
-    'Geko',
-    'Sakallı Ejder',
-    'Bukalemun',
-    'Diğer',
-  ],
-};
+import {
+  PET_TYPES,
+  ANIMAL_SUBTYPES,
+} from '../data/petTypes';
 
 const GENDERS = [
   {label: 'Dişi'},
@@ -326,6 +197,9 @@ export default function AddPetScreen({navigation}: any) {
 
   const [vetDateErrorMessage, setVetDateErrorMessage] =
     useState('');
+
+  const [isSaving, setIsSaving] =
+    useState(false);
 
   /* =====================================================
      FORM RESET
@@ -907,26 +781,53 @@ export default function AddPetScreen({navigation}: any) {
   };
 
   const handleSave = async () => {
-    const currentUser = auth().currentUser;
+    /*
+     * Zaten kayıt yapılıyorsa ikinci kez çalıştırma.
+     */
+    if (isSaving) {
+      return;
+    }
+
+    const currentUser =
+      auth().currentUser;
 
     if (!currentUser) {
-      return Alert.alert(
+      Alert.alert(
         'Hata',
         'Kullanıcı oturumu bulunamadı.',
       );
+
+      return;
     }
 
+    setIsSaving(true);
+
     try {
-      const finalType = customType.trim() || type;
+      console.log(
+        '🐾 ==============================',
+      );
 
-      console.log('[PET TYPE DEBUG]', {
-        selectedType: type,
-        customType,
+      console.log(
+        '🐾 PET KAYDI BAŞLIYOR',
+      );
+
+      const finalType =
+        customType.trim() || type;
+
+      console.log(
+        '🐾 finalType:',
         finalType,
-      });
+      );
 
-      const trimmedWeight = weight.trim();
-      const trimmedWeightGrams = weightGrams.trim();
+      /* =====================================================
+         KİLO
+      ===================================================== */
+
+      const trimmedWeight =
+        weight.trim();
+
+      const trimmedWeightGrams =
+        weightGrams.trim();
 
       const numericWeightKg =
         trimmedWeight === ''
@@ -936,23 +837,33 @@ export default function AddPetScreen({navigation}: any) {
       const numericWeightGrams =
         trimmedWeightGrams === ''
           ? 0
-          : Number(trimmedWeightGrams);
+          : Number(
+              trimmedWeightGrams,
+            );
 
       const hasKg =
         trimmedWeight !== '' &&
-        Number.isFinite(numericWeightKg) &&
+        Number.isFinite(
+          numericWeightKg,
+        ) &&
         numericWeightKg > 0;
 
       const hasGrams =
         trimmedWeightGrams !== '' &&
-        Number.isFinite(numericWeightGrams) &&
+        Number.isFinite(
+          numericWeightGrams,
+        ) &&
         numericWeightGrams > 0 &&
         numericWeightGrams <= 999;
 
       const hasValidWeight =
         (hasKg || hasGrams) &&
-        Number.isFinite(numericWeightKg) &&
-        Number.isFinite(numericWeightGrams) &&
+        Number.isFinite(
+          numericWeightKg,
+        ) &&
+        Number.isFinite(
+          numericWeightGrams,
+        ) &&
         numericWeightKg >= 0 &&
         numericWeightGrams >= 0 &&
         numericWeightGrams <= 999;
@@ -968,6 +879,10 @@ export default function AddPetScreen({navigation}: any) {
           ? numericWeight
           : 0;
 
+      /* =====================================================
+         TARİH
+      ===================================================== */
+
       const today =
         new Date();
 
@@ -981,19 +896,30 @@ export default function AddPetScreen({navigation}: any) {
         ).padStart(2, '0'),
       ].join('-');
 
+      /* =====================================================
+         VETERİNER TARİHİ
+      ===================================================== */
+
       const trimmedVetDate =
         lastVetVisit.trim();
 
       if (trimmedVetDate !== '') {
         const vetDateError =
-          getVetDateErrorMessage(trimmedVetDate);
+          getVetDateErrorMessage(
+            trimmedVetDate,
+          );
 
         if (vetDateError) {
           setVetDateErrorMessage(vetDateError);
           setVetDateErrorVisible(true);
+          setIsSaving(false);
           return;
         }
       }
+
+      /* =====================================================
+         İLK KİLO KAYDI
+      ===================================================== */
 
       const initialWeightHistory =
         hasValidWeight
@@ -1015,6 +941,10 @@ export default function AddPetScreen({navigation}: any) {
             ]
           : [];
 
+      /* =====================================================
+         PET DATA
+      ===================================================== */
+
       const petData = {
         name:
           name.trim(),
@@ -1022,15 +952,9 @@ export default function AddPetScreen({navigation}: any) {
         type:
           finalType,
 
-        // Eski alanı koruyoruz; mevcut ekranlar/servisler
-        // birthYear kullanmaya devam edebilir.
         birthYear:
           Number(birthYear),
 
-        // Yeni doğum tarihi bilgisi:
-        // day   -> GG.AA.YYYY
-        // month -> AA.YYYY
-        // year  -> YYYY
         birthDate:
           birthDate.trim(),
 
@@ -1040,7 +964,9 @@ export default function AddPetScreen({navigation}: any) {
 
         weight:
           hasValidWeight
-            ? String(normalizedWeight)
+            ? String(
+                normalizedWeight,
+              )
             : '',
 
         weightHistory:
@@ -1059,8 +985,16 @@ export default function AddPetScreen({navigation}: any) {
       };
 
       console.log(
-        '🐾 PET KAYDI BAŞLIYOR:',
+        '🐾 PET DATA HAZIR:',
         petData,
+      );
+
+      /* =====================================================
+         FIRESTORE
+      ===================================================== */
+
+      console.log(
+        '🔥 Firestore kaydı başlıyor...',
       );
 
       const id =
@@ -1070,26 +1004,63 @@ export default function AddPetScreen({navigation}: any) {
         );
 
       console.log(
-        '✅ PET FIRESTORE KAYDEDİLDİ:',
+        '✅ Firestore kaydı tamamlandı:',
         id,
       );
 
-      addPet({
+      if (!id) {
+        throw new Error(
+          'Firestore pet ID döndürmedi.',
+        );
+      }
+
+      /* =====================================================
+         CONTEXT
+      ===================================================== */
+
+      console.log(
+        '🐾 Context güncelleniyor...',
+      );
+
+      await addPet({
         id,
+
         ...petData,
+
         ownerId:
           currentUser.uid,
+
         petMembers: [
           currentUser.uid,
         ],
       });
 
       console.log(
-        '✅ PET CONTEXT\'E EKLENDİ',
+        '✅ Context güncellendi.',
       );
 
-      setSuccessVisible(true);
+      /* =====================================================
+         BAŞARILI
+      ===================================================== */
+
+      setIsSaving(false);
+
+      setSuccessVisible(
+        true,
+      );
+
+      console.log(
+        '🎉 PET KAYDI TAMAMLANDI',
+      );
+
+      console.log(
+        '🐾 ==============================',
+      );
     } catch (error) {
+      console.log(
+        '❌ ==============================',
+      );
+
       console.log(
         '❌ PET KAYIT HATASI:',
         error,
@@ -1105,12 +1076,18 @@ export default function AddPetScreen({navigation}: any) {
         (error as any)?.message,
       );
 
+      console.log(
+        '❌ ==============================',
+      );
+
+      setIsSaving(false);
+
       Alert.alert(
         'Kayıt Sırasında Bir Sorun Oluştu',
-        'Dostunuzun bilgileri kaydedilirken beklenmeyen bir sorun oluştu. Lütfen tekrar deneyin.',
+        'Dostunun bilgileri kaydedilirken bir sorun oluştu. Lütfen tekrar dene.',
         [
           {
-            text: 'Tekrar Dene',
+            text: 'Tamam',
           },
         ],
       );
@@ -2003,7 +1980,8 @@ export default function AddPetScreen({navigation}: any) {
 
             <Pressable
               style={styles.mainButtonTouch}
-              onPress={handleSave}>
+              onPress={handleSave}
+              disabled={isSaving}>
 
               <LinearGradient
                 colors={[
@@ -2014,15 +1992,31 @@ export default function AddPetScreen({navigation}: any) {
                 end={{x: 1, y: 0}}
                 style={styles.saveButton}>
 
-                <Text style={styles.saveButtonText}>
-                  Dostu Kaydet
-                </Text>
+                {isSaving ? (
+                  <>
+                    <Text style={styles.saveButtonText}>
+                      Kaydediliyor...
+                    </Text>
 
-                <PawPrint
-                  size={20}
-                  color="#FFFFFF"
-                  strokeWidth={2.2}
-                />
+                    <Sparkles
+                      size={20}
+                      color="#FFFFFF"
+                      strokeWidth={2.2}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.saveButtonText}>
+                      Dostu Kaydet
+                    </Text>
+
+                    <PawPrint
+                      size={20}
+                      color="#FFFFFF"
+                      strokeWidth={2.2}
+                    />
+                  </>
+                )}
 
               </LinearGradient>
 
