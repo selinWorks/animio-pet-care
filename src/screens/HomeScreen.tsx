@@ -576,7 +576,7 @@ export default function HomeScreen() {
             title="Anılarım"
             angle="0deg"
             icon={<BookHeart size={19} color={COLORS.purple} strokeWidth={2} />}
-            position={positionAt(0.24, 0.69, memoriesWidth)}
+            position={positionAt(0.24, 0.72, memoriesWidth)}
             onPress={() => navigation.navigate('MemoriesPremium')}
           />
 
