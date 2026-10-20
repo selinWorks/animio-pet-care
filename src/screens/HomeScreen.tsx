@@ -25,6 +25,7 @@ import {
   ChevronRight,
   Download,
   FileText,
+  BookHeart,
   PawPrint,
   X,
 } from 'lucide-react-native';
@@ -436,6 +437,7 @@ export default function HomeScreen() {
   const calendarWidth = 100 * uiScale;
   const petsWidth = 118 * uiScale;
   const pdfWidth = 122 * uiScale;
+  const memoriesWidth = 124 * uiScale;
 
   const layoutReady = layout.width > 0 && layout.height > 0;
 
@@ -568,6 +570,14 @@ export default function HomeScreen() {
               petsWidth,
             )}
             onPress={() => navigation.navigate('Pets')}
+          />
+
+          <GardenButton
+            title="Anılarım"
+            angle="0deg"
+            icon={<BookHeart size={19} color={COLORS.purple} strokeWidth={2} />}
+            position={positionAt(0.24, 0.69, memoriesWidth)}
+            onPress={() => navigation.navigate('MemoriesPremium')}
           />
 
           <GardenButton

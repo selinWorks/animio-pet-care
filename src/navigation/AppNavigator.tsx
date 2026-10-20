@@ -40,6 +40,8 @@ import Svg, {
 } from 'react-native-svg';
 
 import HomeScreen from '../screens/HomeScreen';
+import MemoriesPremiumScreen from '../screens/MemoriesPremiumScreen';
+import MemoriesPlansScreen from '../screens/MemoriesPlansScreen';
 import PetsScreen from '../screens/PetsScreen';
 import AddPetScreen from '../screens/AddPetScreen';
 import AssistantScreen from '../screens/AssistantScreen';
@@ -75,6 +77,8 @@ export type TabParamList = {
 
 export type RootStackParamList = {
   MainTabs: undefined;
+  MemoriesPremium: undefined;
+  MemoriesPlans: undefined;
   PetDetail: {pet: Pet};
   EditPet: {pet: Pet};
   WeightHistory: {pet: Pet};
@@ -572,6 +576,17 @@ function MainAppNavigator() {
       <Stack.Screen
         name="MainTabs"
         component={TabNavigator}
+        options={{headerShown: false}}
+      />
+
+      <Stack.Screen
+        name="MemoriesPremium"
+        component={MemoriesPremiumScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="MemoriesPlans"
+        component={MemoriesPlansScreen}
         options={{headerShown: false}}
       />
 
