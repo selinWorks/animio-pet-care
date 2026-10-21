@@ -37,6 +37,7 @@ import {
 
 import {RootStackParamList} from '../navigation/AppNavigator';
 import {useAuth} from '../data/AuthContext';
+import {getDefaultPetImage} from '../data/petTypes';
 
 import {
   getHealthHistoryFromFirestore,
@@ -204,94 +205,6 @@ const getHealthCategoryIcon = (record: HealthRecord) => {
 
   return {Icon: HeartPulse, color: '#54A98B', background: '#E8F8F2'};
 };
-
-
-const getDefaultPetImage = (type?: string) => {
-  const normalizedType = (type ?? '')
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-
-  // Kedi
-  if (
-    ['kedi', 'cat'].includes(normalizedType) ||
-    normalizedType.includes('kedi')
-  ) {
-    return require('../assets/images/pets/default-cat-pixel.png');
-  }
-
-  // Köpek
-  if (
-    ['kopek', 'dog'].includes(normalizedType) ||
-    normalizedType.includes('retriever') ||
-    normalizedType.includes('bulldog')
-  ) {
-    return require('../assets/images/pets/default-dog-pixel.png');
-  }
-
-  // Kuş ve tüm kuş alt türleri
-  const birdTypes = [
-    'kus',
-    'bird',
-    'muhabbet kusu',
-    'papagan',
-    'kanarya',
-    'sultan papagani',
-    'sevda papagani',
-    'ispinoz',
-    'guvercin',
-    'serce',
-    'bulbul',
-    'hint bulbulu',
-  ];
-
-  if (
-    birdTypes.includes(normalizedType) ||
-    normalizedType.includes('bulbul') ||
-    normalizedType.includes('kusu')
-  ) {
-    return require('../assets/images/pets/default-bird-pixel.png');
-  }
-
-  // Kemirgen
-  if (
-    ['kemirgen', 'hamster', 'kobay', 'fare', 'sican', 'gerbil', 'sincap']
-      .includes(normalizedType)
-  ) {
-    if (normalizedType === 'hamster') {
-      return require('../assets/images/pets/default-hamster-pixel.png');
-    }
-
-    return require('../assets/images/pets/default-other-pixel.png');
-  }
-
-  // Tavşan
-  if (['tavsan', 'rabbit'].includes(normalizedType)) {
-    return require('../assets/images/pets/default-rabbit-pixel.png');
-  }
-
-  // Balık
-  if (
-    ['balik', 'japon baligi', 'beta', 'lepistes', 'koi', 'fish']
-      .includes(normalizedType) ||
-    normalizedType.includes('baligi')
-  ) {
-    return require('../assets/images/pets/default-fish-pixel.png');
-  }
-
-  // Sürüngen
-  if (
-    ['surungen', 'kaplumbaga', 'yilan', 'kertenkele', 'iguana', 'geko',
-      'bukalemun', 'reptile'].includes(normalizedType)
-  ) {
-    return require('../assets/images/pets/default-reptile-pixel.png');
-  }
-
-  return require('../assets/images/pets/default-other-pixel.png');
-};
-
-
 
 const displayValue = (value: unknown) => {
   if (value === undefined || value === null || value === '') {

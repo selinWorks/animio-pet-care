@@ -38,8 +38,8 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useAuth} from '../data/AuthContext';
 import {usePets} from '../data/PetContext';
-
-import {ANIMAL_SUBTYPES} from './AddPetScreen';
+import { ANIMAL_SUBTYPES } from '../data/petTypes';
+import {getDefaultPetImage} from '../data/petTypes';
 
 import {
   FileText,
@@ -116,88 +116,6 @@ const PASTEL_COLORS = [
 const normalize = (text: string) =>
    text.toLocaleLowerCase('tr-TR').trim();
 
- function getMainAnimalType(type?: string): string {
-   const value = normalize(type || '');
-
-   for (const [mainType, subtypes] of Object.entries(ANIMAL_SUBTYPES)) {
-     if (normalize(mainType) === value) {
-       return mainType;
-     }
-     if (subtypes.some(sub => normalize(sub) === value)) {
-       return mainType;
-     }
-   }
-
-   return '';
- }
-
- function getDefaultPetImage(type?: string) {
-   const value = normalize(type || '');
-   const mainType = getMainAnimalType(type);
-
-   if (mainType === 'Kedi' || value.includes('kedi') || value.includes('cat')) {
-     return require('../assets/images/pets/default-cat-pixel.png');
-   }
-
-   if (mainType === 'Köpek' || value.includes('köpek') || value.includes('kopek') || value.includes('dog')) {
-     return require('../assets/images/pets/default-dog-pixel.png');
-   }
-
-   if (
-     mainType === 'Kuş' ||
-     value.includes('kuş') ||
-     value.includes('kus') ||
-     value.includes('bird') ||
-     value.includes('tavuk') ||
-     value.includes('horoz')
-   ) {
-     return require('../assets/images/pets/default-bird-pixel.png');
-   }
-
-   if (mainType === 'Tavşan' || value.includes('tavşan') || value.includes('tavsan') || value.includes('rabbit')) {
-     return require('../assets/images/pets/default-rabbit-pixel.png');
-   }
-
-   if (mainType === 'Kemirgen' || value.includes('hamster')) {
-     return require('../assets/images/pets/default-hamster-pixel.png');
-   }
-
-   if (mainType === 'Balık' || value.includes('balık') || value.includes('balik') || value.includes('fish')) {
-     return require('../assets/images/pets/default-fish-pixel.png');
-   }
-
-   if (
-     value.includes('amfibi') ||
-     value.includes('kurbağa') ||
-     value.includes('kurbaga') ||
-     value.includes('semender') ||
-     value.includes('aksolotl')
-   ) {
-     return require('../assets/images/pets/default-amfibi-pixel-head.png');
-   }
-
-   if (
-     mainType === 'Sürüngen' ||
-     value.includes('sürüngen') ||
-     value.includes('surungen') ||
-     value.includes('kaplumbağa') ||
-     value.includes('kaplumbaga') ||
-     value.includes('yılan') ||
-     value.includes('yilan') ||
-     value.includes('kertenkele') ||
-     value.includes('iguana') ||
-     value.includes('geko') ||
-     value.includes('bukalemun')
-   ) {
-     return require('../assets/images/pets/default-reptile-pixel.png');
-   }
-
-   if (value.includes('inek') || value.includes('cow')) {
-     return require('../assets/images/pets/default-cow-pixel.png');
-   }
-
-   return require('../assets/images/pets/default-other-pixel.png');
- }
 
 const withTimeout = <T,>(
   promise: Promise<T>,

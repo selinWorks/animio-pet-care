@@ -43,29 +43,12 @@ import {
 
 import {usePets} from '../data/PetContext';
 import {Pet} from '../types/Pet';
-
-const defaultCatAvatar = require('../assets/images/pets/default-cat-pixel.png');
-const defaultDogAvatar = require('../assets/images/pets/default-dog-pixel.png');
-const defaultRabbitAvatar = require('../assets/images/pets/default-rabbit-pixel.png');
-const defaultBirdAvatar = require('../assets/images/pets/default-bird-pixel.png');
-const defaultHamsterAvatar = require('../assets/images/pets/default-hamster-pixel.png');
-const defaultAmphibianAvatar = require('../assets/images/pets/default-amfibi-pixel-head.png');
-const defaultCowAvatar = require('../assets/images/pets/default-cow-pixel.png');
-const defaultReptileAvatar = require('../assets/images/pets/default-reptile-pixel.png');
-const defaultFishAvatar = require('../assets/images/pets/default-fish-pixel.png');
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
+import {getDefaultPetImage} from '../data/petTypes';
 
 type NavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<RootStackParamList>,
   BottomTabNavigationProp<TabParamList>
 >;
-
-/* =========================================================
-   FONTS
-========================================================= */
 
 const F = {
   light: 'Quicksand-Light',
@@ -74,10 +57,6 @@ const F = {
   semiBold: 'Quicksand-SemiBold',
   bold: 'Quicksand-Bold',
 };
-
-/* =========================================================
-   COLORS
-========================================================= */
 
 const C = {
   bg: '#FAF9FF',
@@ -100,10 +79,6 @@ const C = {
 
   border: '#EEEBF6',
 };
-
-/* =========================================================
-   FILTERS
-========================================================= */
 
 type FilterType =
   | 'all'
@@ -131,10 +106,6 @@ const FILTERS: {
   {key: 'reptile', label: 'Sürüngenler', icon: <Turtle size={20} />},
   {key: 'other', label: 'Diğer', icon: <PawPrint size={20} />},
 ];
-
-/* =========================================================
-   HELPERS
-========================================================= */
 
 function normalizeType(type?: string) {
   return (type || '')
@@ -188,89 +159,7 @@ function getPetCategory(type?: string): FilterType {
 }
 
 function getPetAvatar(type?: string): ImageSourcePropType {
-  const value = (type || '').toLocaleLowerCase('tr-TR').trim();
-
-  if (
-    ['kedi', 'cat', 'british shorthair', 'scottish fold', 'siyam',
-      'iran kedisi', 'maine coon', 'ragdoll', 'van kedisi',
-      'tekir', 'sfenks', 'bengal', 'birman', 'abyssinian']
-      .some(name => value.includes(name))
-  ) {
-    return defaultCatAvatar;
-  }
-
-  if (
-    ['köpek', 'kopek', 'dog', 'golden retriever',
-      'labrador', 'alman kurdu', 'french bulldog', 'poodle',
-      'chihuahua', 'beagle', 'husky', 'pomeranian',
-      'rottweiler', 'cocker spaniel', 'dachshund',
-      'maltese', 'shih tzu', 'border collie']
-      .some(name => value.includes(name))
-  ) {
-    return defaultDogAvatar;
-  }
-
-  if (
-    ['kuş', 'kus', 'bird', 'muhabbet', 'papağan', 'papagan',
-      'kanarya', 'sultan papağanı', 'sevda papağanı',
-      'ispinoz', 'güvercin', 'guvercin', 'serçe', 'bülbül',
-      'hint bülbülü']
-      .some(name => value.includes(name))
-  ) {
-    return defaultBirdAvatar;
-  }
-
-  if (
-    ['balık', 'balik', 'fish', 'japon balığı', 'japon baligi',
-      'beta', 'lepistes', 'melek balığı', 'koi',
-      'çöpçü balığı', 'neon tetra', 'moli', 'plati']
-      .some(name => value.includes(name))
-  ) {
-    return defaultFishAvatar;
-  }
-
-  if (
-    ['kemirgen', 'hamster', 'kobay', 'çinçilla', 'cincilla',
-      'fare', 'sıçan', 'sican', 'gerbil', 'sincap']
-      .some(name => value.includes(name))
-  ) {
-    return defaultHamsterAvatar;
-  }
-
-  if (
-    ['sürüngen', 'surungen', 'kaplumbağa', 'kaplumbaga',
-      'yılan', 'yilan', 'kertenkele', 'iguana', 'geko',
-      'sakallı ejder', 'bukalemun', 'örümcek', 'orumcek',
-      'akrep', 'salyangoz', 'yengeç', 'yengec']
-      .some(name => value.includes(name))
-  ) {
-    return defaultReptileAvatar;
-  }
-
-  if (
-    ['amfibi', 'kurbağa', 'kurbaga', 'semender', 'aksolotl']
-      .some(name => value.includes(name))
-  ) {
-    return defaultAmphibianAvatar;
-  }
-
-  if (
-    ['çiftlik hayvanı', 'ciftlik hayvani', 'inek', 'koyun',
-      'keçi', 'keci', 'ördek', 'ordek', 'tavuk', 'kaz',
-      'manda', 'eşek', 'esek', 'deve', 'at']
-      .some(name => value === name || value.startsWith(`${name} `))
-  ) {
-    return defaultCowAvatar;
-  }
-
-  if (
-    ['tavşan', 'tavsan', 'rabbit', 'kirpi', 'gelincik']
-      .some(name => value.includes(name))
-  ) {
-    return defaultRabbitAvatar;
-  }
-
-  return defaultCatAvatar;
+  return getDefaultPetImage(type);
 }
 
 /* =========================================================

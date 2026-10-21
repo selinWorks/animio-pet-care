@@ -57,6 +57,8 @@ import {
 import {RootStackParamList} from '../navigation/AppNavigator';
 import {usePets} from '../data/PetContext';
 import {useAuth} from '../data/AuthContext';
+import {getDefaultPetImage} from '../data/petTypes';
+
 import {getPetAgeParts, birthFromAgeParts} from '../utils/petAge';
 
 type EditPetRouteProp = RouteProp<RootStackParamList, 'EditPet'>;
@@ -83,60 +85,8 @@ type PopupIconType =
   | 'photo'
   | 'info';
 
-// Varsayılan görseller Dostlarım ekranındaki assetlerle aynıdır.
-const DEFAULT_AVATARS = {
-  cat: require('../assets/images/pets/default-cat-pixel.png'),
-  dog: require('../assets/images/pets/default-dog-pixel.png'),
-  bird: require('../assets/images/pets/default-bird-pixel.png'),
-  hamster: require('../assets/images/pets/default-hamster-pixel.png'),
-  rabbit: require('../assets/images/pets/default-rabbit-pixel.png'),
-  fish: require('../assets/images/pets/default-fish-pixel.png'),
-  reptile: require('../assets/images/pets/default-reptile-pixel.png'),
-  amphibian: require('../assets/images/pets/default-amfibi-pixel-head.png'),
-  cow: require('../assets/images/pets/default-cow-pixel.png'),
-} as const;
-
 function getDefaultPetAvatar(type?: string) {
-  const value = (type || '').toLocaleLowerCase('tr-TR').trim();
-  const includesAny = (items: string[]) => items.some(item => value.includes(item));
-
-  if (includesAny(['kedi', 'cat', 'british shorthair', 'scottish fold', 'siyam',
-    'maine coon', 'ragdoll', 'tekir', 'sfenks', 'bengal', 'birman', 'abyssinian'])) {
-    return DEFAULT_AVATARS.cat;
-  }
-  if (includesAny(['köpek', 'kopek', 'dog', 'golden retriever', 'labrador',
-    'alman kurdu', 'french bulldog', 'poodle', 'chihuahua', 'beagle', 'husky',
-    'pomeranian', 'rottweiler', 'cocker spaniel', 'dachshund', 'maltese',
-    'shih tzu', 'border collie'])) {
-    return DEFAULT_AVATARS.dog;
-  }
-  if (includesAny(['kuş', 'kus', 'bird', 'muhabbet', 'papağan', 'papagan',
-    'kanarya', 'ispinoz', 'güvercin', 'guvercin', 'serçe', 'bülbül'])) {
-    return DEFAULT_AVATARS.bird;
-  }
-  if (includesAny(['kemirgen', 'hamster', 'kobay', 'gine domuzu', 'çinçilla',
-    'cincilla', 'fare', 'sıçan', 'sican', 'gerbil'])) {
-    return DEFAULT_AVATARS.hamster;
-  }
-  if (includesAny(['tavşan', 'tavsan', 'rabbit', 'kirpi', 'gelincik'])) {
-    return DEFAULT_AVATARS.rabbit;
-  }
-  if (includesAny(['balık', 'balik', 'fish', 'beta', 'lepistes', 'koi',
-    'moli', 'plati', 'tetra'])) {
-    return DEFAULT_AVATARS.fish;
-  }
-  if (includesAny(['sürüngen', 'surungen', 'kaplumbağa', 'kaplumbaga',
-    'yılan', 'yilan', 'kertenkele', 'iguana', 'geko', 'ejder', 'bukalemun'])) {
-    return DEFAULT_AVATARS.reptile;
-  }
-  if (includesAny(['amfibi', 'kurbağa', 'kurbaga', 'semender', 'aksolotl'])) {
-    return DEFAULT_AVATARS.amphibian;
-  }
-  if (includesAny(['inek', 'koyun', 'keçi', 'keci', 'ördek', 'ordek',
-    'tavuk', 'kaz', 'manda', 'eşek', 'esek', 'deve'])) {
-    return DEFAULT_AVATARS.cow;
-  }
-  return DEFAULT_AVATARS.cat;
+  return getDefaultPetImage(type);
 }
 
 type MenuKey = 'general' | 'health';

@@ -44,6 +44,8 @@ import notifee, {EventType} from '@notifee/react-native';
 
 import {usePets} from '../data/PetContext';
 import {useAuth} from '../data/AuthContext';
+import {getDefaultPetImage} from '../data/petTypes';
+
 import {
   getCareEventsFromFirestore,
   getHealthHistoryFromFirestore,
@@ -77,67 +79,6 @@ type ButtonPosition = {
   width: number;
   height: number;
 };
-
-function getDefaultPetImage(type?: string) {
-  const value = (type || '')
-    .toLocaleLowerCase('tr-TR')
-    .trim();
-
-  if (value.includes('kedi') || value.includes('cat')) {
-    return require('../assets/images/pets/default-cat-pixel.png');
-  }
-
-  if (value.includes('köpek') || value.includes('kopek') || value.includes('dog')) {
-    return require('../assets/images/pets/default-dog-pixel.png');
-  }
-
-  if (value.includes('kuş') || value.includes('kus') || value.includes('bird')) {
-    return require('../assets/images/pets/default-bird-pixel.png');
-  }
-
-  if (value.includes('tavşan') || value.includes('tavsan') || value.includes('rabbit')) {
-    return require('../assets/images/pets/default-rabbit-pixel.png');
-  }
-
-  if (value.includes('hamster')) {
-    return require('../assets/images/pets/default-hamster-pixel.png');
-  }
-
-  if (value.includes('balık') || value.includes('balik') || value.includes('fish')) {
-    return require('../assets/images/pets/default-fish-pixel.png');
-  }
-
-  if (
-    value.includes('amfibi') ||
-    value.includes('kurbağa') ||
-    value.includes('kurbaga') ||
-    value.includes('semender') ||
-    value.includes('aksolotl')
-  ) {
-    return require('../assets/images/pets/default-amfibi-pixel-head.png');
-  }
-
-  if (
-    value.includes('sürüngen') ||
-    value.includes('surungen') ||
-    value.includes('kaplumbağa') ||
-    value.includes('kaplumbaga') ||
-    value.includes('yılan') ||
-    value.includes('yilan') ||
-    value.includes('kertenkele') ||
-    value.includes('iguana') ||
-    value.includes('geko') ||
-    value.includes('bukalemun')
-  ) {
-    return require('../assets/images/pets/default-reptile-pixel.png');
-  }
-
-  if (value.includes('inek') || value.includes('cow')) {
-    return require('../assets/images/pets/default-cow-pixel.png');
-  }
-
-  return require('../assets/images/pets/default-other-pixel.png');
-}
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();

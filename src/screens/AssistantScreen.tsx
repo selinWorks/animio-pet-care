@@ -45,8 +45,8 @@ import {
 } from 'lucide-react-native';
 
 import {useAuth} from '../data/AuthContext';
-import {
-  addAssistantChatToFirestore,
+import {ANIMAL_SUBTYPES} from '../data/petTypes';
+import { addAssistantChatToFirestore,
   deleteAssistantChatFromFirestore,
   getAssistantChatsFromFirestore,
 } from '../services/firestore';
@@ -74,104 +74,6 @@ type PetType =
   | 'Balık'
   | 'Sürüngen'
   | '';
-
-
-  /* =========================================================
-     HAYVAN TÜRLERİ
-     AddPetScreen ile aynı yapı
-  ========================================================= */
-
-
-const ANIMAL_SUBTYPES: Record<string, string[]> = {
-  Kedi: [
-    'British Shorthair',
-    'Scottish Fold',
-    'Siyam',
-    'İran Kedisi',
-    'Maine Coon',
-    'Ragdoll',
-    'Van Kedisi',
-    'Tekir',
-    'Sfenks',
-    'Bengal',
-    'Birman',
-    'Abyssinian',
-    'Diğer',
-  ],
-
-  Köpek: [
-    'Golden Retriever',
-    'Labrador Retriever',
-    'Alman Kurdu',
-    'French Bulldog',
-    'Poodle',
-    'Chihuahua',
-    'Beagle',
-    'Husky',
-    'Pomeranian',
-    'Rottweiler',
-    'Cocker Spaniel',
-    'Dachshund',
-    'Maltese',
-    'Shih Tzu',
-    'Border Collie',
-    'Diğer',
-  ],
-
-  Kuş: [
-    'Muhabbet Kuşu',
-    'Papağan',
-    'Kanarya',
-    'Sultan Papağanı',
-    'Sevda Papağanı',
-    'İspinoz',
-    'Güvercin',
-    'Serçe',
-    'Bülbül',
-    'Hint Bülbülü',
-    'Diğer',
-  ],
-
-  Kemirgen: [
-    'Hamster',
-    'Kobay',
-    'Çinçilla',
-    'Fare',
-    'Sıçan',
-    'Gerbil',
-    'Sincap',
-    'Diğer',
-  ],
-
-  Tavşan: [
-    'Tavşan',
-  ],
-
-  Balık: [
-    'Japon Balığı',
-    'Beta',
-    'Lepistes',
-    'Melek Balığı',
-    'Koi',
-    'Çöpçü Balığı',
-    'Neon Tetra',
-    'Moli',
-    'Plati',
-    'Diğer',
-  ],
-
-  Sürüngen: [
-    'Kaplumbağa',
-    'Yılan',
-    'Kertenkele',
-    'İguana',
-    'Geko',
-    'Sakallı Ejder',
-    'Bukalemun',
-    'Diğer',
-  ],
-};
-
 
   const GENERAL_ANIMAL_TYPES = [
     'Kemirgen',

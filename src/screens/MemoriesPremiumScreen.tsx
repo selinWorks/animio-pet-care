@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {getDefaultPetImage} from '../data/petTypes';
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,10 +35,10 @@ const C = {
 };
 
 const PET_ART = [
-  require('../assets/images/pets/default-cat-pixel.png'),
-  require('../assets/images/pets/default-dog-pixel.png'),
-  require('../assets/images/pets/default-rabbit-pixel.png'),
-  require('../assets/images/pets/default-bird-pixel.png'),
+  getDefaultPetImage('Kedi'),
+  getDefaultPetImage('Köpek'),
+  getDefaultPetImage('Tavşan'),
+  getDefaultPetImage('Kuş'),
 ];
 
 const FEATURES = [

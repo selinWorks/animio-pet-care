@@ -16,6 +16,7 @@ import type {RouteProp} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useAuth} from '../data/AuthContext';
 import {usePets} from '../data/PetContext';
+import {getDefaultPetImage} from '../data/petTypes';
 import {
   getPetMembersForManagement, removePetMemberFromFirestore, createPetInvitation,
 } from '../services/firestore';
@@ -32,102 +33,9 @@ type FamilyModalConfig = {
 const PURPLE = '#7257E8';
 const DARK_PURPLE = '#242137';
 
-const defaultCatAvatar = require('../assets/images/pets/default-cat-pixel.png');
-const defaultDogAvatar = require('../assets/images/pets/default-dog-pixel.png');
-const defaultRabbitAvatar = require('../assets/images/pets/default-rabbit-pixel.png');
-const defaultBirdAvatar = require('../assets/images/pets/default-bird-pixel.png');
-const defaultHamsterAvatar = require('../assets/images/pets/default-hamster-pixel.png');
-const defaultAmphibianAvatar = require('../assets/images/pets/default-amfibi-pixel-head.png');
-const defaultCowAvatar = require('../assets/images/pets/default-cow-pixel.png');
-const defaultReptileAvatar = require('../assets/images/pets/default-reptile-pixel.png');
-const defaultFishAvatar = require('../assets/images/pets/default-fish-pixel.png');
-
 function getPetAvatar(type?: string): ImageSourcePropType {
-  const value = (type || '').toLocaleLowerCase('tr-TR').trim();
-
-  if (
-    ['kedi', 'cat', 'british shorthair', 'scottish fold', 'siyam',
-      'iran kedisi', 'maine coon', 'ragdoll', 'van kedisi',
-      'tekir', 'sfenks', 'bengal', 'birman', 'abyssinian']
-      .some(name => value.includes(name))
-  ) {
-    return defaultCatAvatar;
-  }
-
-  if (
-    ['köpek', 'kopek', 'dog', 'golden retriever',
-      'labrador', 'alman kurdu', 'french bulldog', 'poodle',
-      'chihuahua', 'beagle', 'husky', 'pomeranian',
-      'rottweiler', 'cocker spaniel', 'dachshund',
-      'maltese', 'shih tzu', 'border collie']
-      .some(name => value.includes(name))
-  ) {
-    return defaultDogAvatar;
-  }
-
-  if (
-    ['kuş', 'kus', 'bird', 'muhabbet', 'papağan', 'papagan',
-      'kanarya', 'sultan papağanı', 'sevda papağanı',
-      'ispinoz', 'güvercin', 'guvercin', 'serçe', 'bülbül',
-      'hint bülbülü']
-      .some(name => value.includes(name))
-  ) {
-    return defaultBirdAvatar;
-  }
-
-  if (
-    ['balık', 'balik', 'fish', 'japon balığı', 'japon baligi',
-      'beta', 'lepistes', 'melek balığı', 'koi',
-      'çöpçü balığı', 'neon tetra', 'moli', 'plati']
-      .some(name => value.includes(name))
-  ) {
-    return defaultFishAvatar;
-  }
-
-  if (
-    ['kemirgen', 'hamster', 'kobay', 'çinçilla', 'cincilla',
-      'fare', 'sıçan', 'sican', 'gerbil', 'sincap']
-      .some(name => value.includes(name))
-  ) {
-    return defaultHamsterAvatar;
-  }
-
-  if (
-    ['sürüngen', 'surungen', 'kaplumbağa', 'kaplumbaga',
-      'yılan', 'yilan', 'kertenkele', 'iguana', 'geko',
-      'sakallı ejder', 'bukalemun', 'örümcek', 'orumcek',
-      'akrep', 'salyangoz', 'yengeç', 'yengec']
-      .some(name => value.includes(name))
-  ) {
-    return defaultReptileAvatar;
-  }
-
-  if (
-    ['amfibi', 'kurbağa', 'kurbaga', 'semender', 'aksolotl']
-      .some(name => value.includes(name))
-  ) {
-    return defaultAmphibianAvatar;
-  }
-
-  if (
-    ['çiftlik hayvanı', 'ciftlik hayvani', 'inek', 'koyun',
-      'keçi', 'keci', 'ördek', 'ordek', 'tavuk', 'kaz',
-      'manda', 'eşek', 'esek', 'deve', 'at']
-      .some(name => value === name || value.startsWith(`${name} `))
-  ) {
-    return defaultCowAvatar;
-  }
-
-  if (
-    ['tavşan', 'tavsan', 'rabbit', 'kirpi', 'gelincik']
-      .some(name => value.includes(name))
-  ) {
-    return defaultRabbitAvatar;
-  }
-
-  return defaultCatAvatar;
+  return getDefaultPetImage(type);
 }
-
 
 // PetsScreen ile aynı görsel seçimi: profil fotoğrafı, yoksa türün varsayılan görseli.
 function PetAvatar({pet, size = 40}: {pet: Pet; size?: number}) {
