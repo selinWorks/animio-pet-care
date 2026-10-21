@@ -113,6 +113,25 @@ export const ANIMAL_SUBTYPES: Record<string, string[]> = {
 
   Tavşan: [
     'Tavşan',
+    'Hollanda Lop',
+    'Mini Lop',
+    'Hollanda Cücesi',
+    'Aslanbaş Tavşan',
+    'Rex Tavşan',
+    'Mini Rex',
+    'Hollanda Tavşanı',
+    'Himalaya Tavşanı',
+    'İngiliz Angora',
+    'Fransız Lop',
+    'İngiliz Lop',
+    'Flemish Giant',
+    'Kaliforniya Tavşanı',
+    'Yeni Zelanda Tavşanı',
+    'Havana Tavşanı',
+    'Polonya Tavşanı',
+    'Harlequin Tavşanı',
+    'Saten Tavşanı',
+    'Diğer',
   ],
 
   Balık: [
@@ -163,6 +182,10 @@ export function getMainAnimalType(type?: string): string {
 export function getDefaultPetImage(type?: string) {
   const value = normalizePetType(type);
   const mainType = getMainAnimalType(type);
+
+  if (value === 'diğer') {
+    return require('../assets/images/pets/default-other-pixel.png');
+  }
 
   if (mainType === 'Kedi' || value.includes('kedi') || value.includes('cat')) {
     return require('../assets/images/pets/default-cat-pixel.png');

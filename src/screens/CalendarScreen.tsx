@@ -379,16 +379,13 @@ export default function CalendarScreen() {
     try {
       const settings = await notifee.requestPermission();
 
-      if (settings.authorizationStatus < AuthorizationStatus.AUTHORIZED) {
-        await notifee.openNotificationSettings();
-        return;
-      }
+      const isAuthorized =
+        settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
+        settings.authorizationStatus === AuthorizationStatus.PROVISIONAL;
 
-      if (Platform.OS === 'android') {
-        const s = await notifee.getNotificationSettings();
-        if (s.android.alarm !== AndroidNotificationSetting.ENABLED) {
-          await notifee.openAlarmPermissionSettings();
-        }
+      if (!isAuthorized) {
+        console.log('Kullanıcı bildirim izni vermedi.');
+        return false;
       }
 
       await notifee.createChannel({
@@ -398,8 +395,14 @@ export default function CalendarScreen() {
         sound: 'default',
         vibration: true,
       });
+
+      // Ayarlar ekranını otomatik açma.
+      // Alarm iznini daha sonra ayrıca ele alacağız.
+
+      return true;
     } catch (error) {
       console.log('Bildirim izni hatası:', error);
+      return false;
     }
   };
 
