@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   View,
@@ -9,6 +9,8 @@ import {
   Image,
   StatusBar,
   ImageSourcePropType,
+  Animated,
+  Alert,
 } from 'react-native';
 
 import {
@@ -26,6 +28,8 @@ import {
   Images,
   ChevronRight,
   Users,
+  Check,
+  Trash2,
 } from 'lucide-react-native';
 
 import {
@@ -167,7 +171,13 @@ function getPetAvatar(type?: string): ImageSourcePropType {
 ========================================================= */
 
 export default function PetsScreen() {
-  const {pets} = usePets();
+  const petContext = usePets();
+  const {pets} = petContext;
+  // PetContext dosyası paylaşılmadığından, mevcut silme fonksiyonu
+  // yalnızca varsa çağrılır. Farklı bir API kullanıyorsan bağlamalısın.
+  const deletePet = (petContext as typeof petContext & {
+    deletePet?: (id: Pet['id']) => Promise<void> | void;
+  }).deletePet;
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
 
@@ -176,7 +186,94 @@ export default function PetsScreen() {
   const [selectedFilter, setSelectedFilter] =
     useState<FilterType>('all');
 
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const actionProgress = useRef(new Animated.Value(0)).current;
+
+  // Tek bir native animasyon degeri buton tiklandigi anda baslatilir.
+  // Kart basina useEffect beklenmez.
+  const animateSelection = (active: boolean) => {
+    actionProgress.stopAnimation();
+    Animated.spring(actionProgress, {
+      toValue: active ? 1 : 0,
+      useNativeDriver: true,
+      damping: 19,
+      stiffness: 190,
+      mass: 0.85,
+    }).start();
+  };
+
   const petList: Pet[] = pets || [];
+
+  // Silinen ya da erişimi kaldırılan kayıtlar seçili kalmasın.
+  useEffect(() => {
+    const validIds = new Set(petList.map(pet => String(pet.id)));
+    setSelectedIds(previous => previous.filter(id => validIds.has(id)));
+  }, [pets]);
+
+  const exitSelection = () => {
+    animateSelection(false);
+    setSelectionMode(false);
+    setSelectedIds([]);
+  };
+
+  const toggleSelected = useCallback((id: string) => {
+    if (deleting) return;
+    setSelectedIds(previous =>
+      previous.includes(id)
+        ? previous.filter(item => item !== id)
+        : [...previous, id],
+    );
+  }, [deleting]);
+
+  const openPet = useCallback((pet: Pet) => {
+    navigation.navigate('PetDetail', {pet});
+  }, [navigation]);
+
+  const confirmBulkDelete = () => {
+    if (!selectedIds.length || deleting) return;
+    if (!deletePet) {
+      Alert.alert(
+        'Silme işlemi bağlanamadı',
+        'PetContext içindeki mevcut profil silme fonksiyonu bu ekrana bağlanmalı. Henüz hiçbir kayıt silinmedi.',
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Dostları sil?',
+      `${selectedIds.length} dostun profilini silmek istediğine emin misin? Bu işlem geri alınamaz.`,
+      [
+        {text: 'Vazgeç', style: 'cancel'},
+        {
+          text: 'Profilleri Sil',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            let deletedCount = 0;
+            try {
+              // Mevcut tekli silme akışını kullan; ayrı bir Firebase yolu uydurma.
+              for (const id of selectedIds) {
+                await deletePet(id as Pet['id']);
+                deletedCount += 1;
+              }
+              exitSelection();
+            } catch (error) {
+              const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
+              Alert.alert(
+                'Silme tamamlanamadı',
+                `${deletedCount} profil silindi. Kalanlar silinemedi. ${message}`,
+              );
+              setSelectedIds(previous => previous.slice(deletedCount));
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const filteredPets = useMemo(() => {
     if (selectedFilter === 'all') {
@@ -191,7 +288,7 @@ export default function PetsScreen() {
   }, [petList, selectedFilter]);
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, {paddingTop: topInset}]}>
       <StatusBar
         translucent
         barStyle="dark-content"
@@ -200,15 +297,26 @@ export default function PetsScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, {paddingTop: topInset + 16}]}>
+        contentContainerStyle={[styles.content, {paddingTop: 16}]}>
 
         {/* =================================================
             TITLE
         ================================================= */}
 
-        <Text style={styles.pageTitle}>
-          Dostlarım
-        </Text>
+        <View style={styles.pageTitleRow}>
+          <Text style={styles.pageTitle}>Dostlarım</Text>
+          {petList.length > 0 && (
+            <Pressable
+              onPress={() => navigation.navigate('PetJoin')}
+              style={({pressed}) => [
+                styles.joinSmallButton,
+                pressed && styles.joinSmallButtonPressed,
+              ]}>
+              <Users size={17} color={C.purple} strokeWidth={2.1} />
+              <Text style={styles.joinSmallText}>Kodla Katıl</Text>
+            </Pressable>
+          )}
+        </View>
 
         {/* =================================================
             FILTERS
@@ -290,47 +398,13 @@ export default function PetsScreen() {
           </>
         ) : (
           <>
-            <View style={styles.petSectionHeader}>
-
-              <View>
-                <Text style={styles.petSectionTitle}>
-                  {selectedFilter === 'all'
-                    ? 'Tüm dostların'
-                    : FILTERS.find(
-                        item =>
-                          item.key === selectedFilter,
-                      )?.label}
-                </Text>
-
-                <Text style={styles.petCount}>
-                  {filteredPets.length} dost
-                </Text>
-              </View>
-
-              <View style={styles.petHeaderActions}>
-
-                <Pressable
-                  onPress={() =>
-                    navigation.navigate('PetJoin')
-                  }
-                  style={({pressed}) => [
-                    styles.joinSmallButton,
-                    pressed &&
-                      styles.joinSmallButtonPressed,
-                  ]}>
-
-                  <Users
-                    size={17}
-                    color={C.purple}
-                    strokeWidth={2.1}
-                  />
-
-                  <Text style={styles.joinSmallText}>
-                    Kodla Katıl
-                  </Text>
-
-                </Pressable>
-
+            <View style={styles.petListToolbar}>
+              <Text style={styles.petCount}>
+                {selectionMode
+                  ? `${selectedIds.length} seçildi`
+                  : `${filteredPets.length} dost`}
+              </Text>
+              <View style={styles.petToolbarActions}>
                 <Pressable
                   onPress={() =>
                     navigation.navigate('AddPet')
@@ -354,8 +428,30 @@ export default function PetsScreen() {
 
                 </Pressable>
 
+              {filteredPets.length > 0 && (
+                <Pressable
+                  disabled={deleting}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={selectionMode ? 'Seçimden çık' : 'Dostları seç'}
+                  onPress={() => {
+                    if (selectionMode) exitSelection();
+                    else {
+                      animateSelection(true);
+                      setSelectionMode(true);
+                    }
+                  }}
+                  style={({pressed}) => [
+                    styles.selectButton,
+                    selectionMode && styles.selectButtonActive,
+                    pressed && styles.selectButtonPressed,
+                  ]}>
+                  <Text style={styles.selectLabel}>
+                    {selectionMode ? 'Vazgeç' : 'Seç'}
+                  </Text>
+                </Pressable>
+              )}
               </View>
-
             </View>
 
             {filteredPets.length > 0 ? (
@@ -365,13 +461,12 @@ export default function PetsScreen() {
                   <PetCard
                     key={pet.id}
                     pet={pet}
-                    onPress={() =>
-                      navigation.navigate(
-                        'PetDetail',
-                        {pet},
-                      )
-                    }
-                  />
+                     selectionMode={selectionMode}
+                     progress={actionProgress}
+                     selected={selectedIds.includes(String(pet.id))}
+                     onSelect={toggleSelected}
+                     onOpen={openPet}
+                   />
                 ))}
 
               </View>
@@ -399,8 +494,48 @@ export default function PetsScreen() {
           </>
         )}
 
-      </ScrollView>
-    </View>
+       </ScrollView>
+
+       {petList.length > 0 && (
+         <Animated.View
+           pointerEvents={selectionMode ? 'auto' : 'none'}
+           style={[
+             styles.bulkActionContainer,
+             {bottom: Math.max(insets.bottom, 10) + 78},
+             {
+               opacity: actionProgress,
+               transform: [{translateY: actionProgress.interpolate({
+                 inputRange: [0, 1], outputRange: [32, 0],
+               })}],
+             },
+           ]}>
+           <Pressable
+             disabled={deleting}
+             onPress={() => {
+               const visibleIds = filteredPets.map(pet => String(pet.id));
+               const allVisibleSelected = visibleIds.every(id => selectedIds.includes(id));
+               setSelectedIds(previous => allVisibleSelected
+                 ? previous.filter(id => !visibleIds.includes(id))
+                 : [...new Set([...previous, ...visibleIds])]);
+             }}
+             style={styles.selectAllButton}>
+             <Text style={styles.selectAllLabel}>
+               {filteredPets.length > 0 && filteredPets.every(pet => selectedIds.includes(String(pet.id)))
+                 ? 'Seçimi kaldır' : 'Tümünü seç'}
+             </Text>
+           </Pressable>
+           <Pressable
+             disabled={!selectedIds.length || deleting}
+             onPress={confirmBulkDelete}
+             style={[styles.deleteSelectedButton, (!selectedIds.length || deleting) && styles.deleteDisabled]}>
+             <Trash2 size={17} color={C.white} strokeWidth={2} />
+             <Text style={styles.deleteSelectedText}>
+               {deleting ? 'Siliniyor...' : `Sil (${selectedIds.length})`}
+             </Text>
+           </Pressable>
+         </Animated.View>
+       )}
+     </View>
   );
 }
 
@@ -614,75 +749,131 @@ function BenefitCard({
    PET CARD
 ========================================================= */
 
-function PetCard({
+const PetCard = React.memo(function PetCard({
   pet,
-  onPress,
+  onSelect,
+  onOpen,
+  selectionMode,
+  progress,
+  selected,
 }: {
   pet: Pet;
-  onPress: () => void;
+  onSelect: (id: string) => void;
+  onOpen: (pet: Pet) => void;
+  selectionMode: boolean;
+  progress: Animated.Value;
+  selected: boolean;
 }) {
+  // Tik icin yay animasyonu kullanma: dokunuldugu anda guncelle.
+  // State tumunu sec / secimi kaldir islemlerinin tek dogruluk kaynagidir.
+  const selectedProgress = useRef(new Animated.Value(selected ? 1 : 0)).current;
+  const touchTarget = useRef(selected);
+
+  useEffect(() => {
+    touchTarget.current = selected;
+    selectedProgress.stopAnimation();
+    selectedProgress.setValue(selected ? 1 : 0);
+  }, [selected, selectedProgress]);
+
+  const previewToggle = () => {
+    if (!selectionMode) return;
+    const next = !touchTarget.current;
+    touchTarget.current = next;
+    selectedProgress.stopAnimation();
+    selectedProgress.setValue(next ? 1 : 0);
+    // Gorsel tepki ve gercek secim AYNI dokunmada yapilir.
+    onSelect(String(pet.id));
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${pet.name}, ${selected ? 'seçili' : 'seçili değil'}`}
+      onPressIn={previewToggle}
+      onPress={() => { if (!selectionMode) onOpen(pet); }}
       style={({pressed}) => [
         styles.petCard,
-
-        pressed &&
-          styles.petCardPressed,
+        // Secili kart vurgusu artik animated overlay ile dokunma aninda guncellenir.
+        // Secim modunda Pressable scale geri bildirimi gec tetiklenebiliyor.
+        // Tik zaten aninda tepki verdigi icin karti gecikmeli kucultmeyelim.
+        !selectionMode && pressed && styles.petCardPressed,
       ]}>
 
-      <View style={styles.petAvatar}>
+      {/* Mor arka plan ve cerceve, tik ile AYNI Animated.Value kullanir.
+          Boylece React'in sonraki render'ini beklemeden guncellenir. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.petSelectedOverlay,
+          {opacity: selectedProgress},
+        ]}
+      />
 
-        {pet.photoUrl || pet.photoUri ? (
-          <Image
-            source={{
-              uri: pet.photoUrl || pet.photoUri,
-            }}
-            style={styles.petAvatarImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <Image
-            source={getPetAvatar(pet.type)}
-            style={styles.petAvatarImage}
-            resizeMode="contain"
-          />
-        )}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.petCheckboxPosition,
+          {
+            opacity: progress,
+            transform: [
+              {translateX: progress.interpolate({inputRange: [0, 1], outputRange: [-12, 0]})},
+              {scale: progress.interpolate({inputRange: [0, 1], outputRange: [0.65, 1]})},
+            ],
+          },
+        ]}>
+        <View style={styles.petCheckbox}>
+          <Animated.View
+            style={[
+              styles.petCheckboxFill,
+              {
+                opacity: selectedProgress,
+                transform: [{scale: selectedProgress}],
+              },
+            ]}>
+            <Check size={15} color={C.white} strokeWidth={3} />
+          </Animated.View>
+        </View>
+      </Animated.View>
 
-      </View>
+      <Animated.View
+        style={[styles.petMainContent, {
+          transform: [{translateX: progress.interpolate({inputRange: [0, 1], outputRange: [0, 33]})}],
+        }]}>
+        <View style={styles.petAvatar}>
+          {pet.photoUrl || pet.photoUri ? (
+            <Image
+              source={{uri: pet.photoUrl || pet.photoUri}}
+              style={styles.petAvatarImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Image
+              source={getPetAvatar(pet.type)}
+              style={styles.petAvatarImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
 
-      <View style={styles.petInfo}>
+        <View style={styles.petInfo}>
+          <Text numberOfLines={1} style={styles.petName}>{pet.name}</Text>
+          <Text numberOfLines={1} style={styles.petMeta}>
+            {pet.type}{pet.age ? ` • ${pet.age} yaş` : ''}
+          </Text>
+        </View>
+      </Animated.View>
 
-        <Text
-          numberOfLines={1}
-          style={styles.petName}>
-          {pet.name}
-        </Text>
-
-        <Text
-          numberOfLines={1}
-          style={styles.petMeta}>
-          {pet.type}
-          {pet.age
-            ? ` • ${pet.age} yaş`
-            : ''}
-        </Text>
-
-      </View>
-
-      <View style={styles.petArrow}>
-
-        <ChevronRight
-          size={19}
-          color={C.purple}
-          strokeWidth={2}
-        />
-
-      </View>
-
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.petArrow, {
+          opacity: progress.interpolate({inputRange: [0, 0.55, 1], outputRange: [1, 0, 0]}),
+          transform: [{scale: progress.interpolate({inputRange: [0, 1], outputRange: [1, 0.7]})}],
+        }]}>
+        <ChevronRight size={19} color={C.purple} strokeWidth={2} />
+      </Animated.View>
     </Pressable>
   );
-}
+});
 
 /* =========================================================
    STYLES
@@ -708,6 +899,14 @@ const styles = StyleSheet.create({
      TITLE
   ===================================================== */
 
+  pageTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 21,
+    gap: 10,
+  },
+
   pageTitle: {
     fontSize: 34,
     lineHeight: 41,
@@ -717,8 +916,6 @@ const styles = StyleSheet.create({
     color: C.text,
 
     letterSpacing: -1.2,
-
-    marginBottom: 21,
   },
 
   /* =====================================================
@@ -1124,23 +1321,31 @@ const styles = StyleSheet.create({
      PET LIST HEADER
   ===================================================== */
 
-  petSectionHeader: {
+  petToolbarActions: {
     flexDirection: 'row',
-
+    alignItems: 'center',
+    gap: 8,
+  },
+  petListToolbar: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
-    marginBottom: 17,
+    minHeight: 34,
+    marginBottom: 10,
   },
-
-  petSectionTitle: {
-    fontSize: 22,
-
-    fontFamily: F.bold,
-
-    color: C.text,
+  selectButton: {
+    paddingHorizontal: 14,
+    height: 43,
+    borderRadius: 22,
+    backgroundColor: C.purpleSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
+  selectButtonActive: {
+    backgroundColor: '#E9E1FF',
+  },
+  selectButtonPressed: { opacity: 0.72 },
+  selectLabel: { fontSize: 12, fontFamily: F.bold, color: C.purple },
   petCount: {
     fontSize: 12,
 
@@ -1259,6 +1464,25 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
+  petCardSelected: { borderColor: '#C8BBFF', backgroundColor: '#FCFAFF' },
+  petSelectedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: '#C8BBFF',
+    backgroundColor: 'rgba(113, 87, 244, 0.025)',
+  },
+  petMainContent: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center' },
+  petCheckboxPosition: { position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' },
+  petCheckbox: { width: 23, height: 23, borderRadius: 12, borderWidth: 1.7, borderColor: '#C3B8E9', alignItems: 'center', justifyContent: 'center', backgroundColor: C.white },
+  petCheckboxSelected: { borderColor: C.purple, backgroundColor: C.purple },
+  petCheckboxFill: { position: 'absolute', top: -1.7, bottom: -1.7, left: -1.7, right: -1.7, borderRadius: 12, backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center' },
+  bulkActionContainer: { position: 'absolute', left: 18, right: 18, borderRadius: 23, padding: 10, backgroundColor: C.white, borderWidth: 1, borderColor: C.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', shadowColor: '#322760', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: {width: 0, height: 8}, elevation: 8 },
+  selectAllButton: {paddingHorizontal: 13, paddingVertical: 12},
+  selectAllLabel: {fontFamily: F.semiBold, fontSize: 13, color: C.purple},
+  deleteSelectedButton: {backgroundColor: '#E34C69', borderRadius: 17, paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8},
+  deleteDisabled: {opacity: 0.4},
+  deleteSelectedText: {color: C.white, fontFamily: F.bold, fontSize: 13},
   petCardPressed: {
     opacity: 0.84,
 
@@ -1399,3 +1623,4 @@ const styles = StyleSheet.create({
     maxWidth: 260,
   },
 });
+
